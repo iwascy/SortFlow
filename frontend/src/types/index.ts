@@ -7,6 +7,7 @@ export interface FileItem {
   mtime: number;
   thumbnailUrl?: string;
   metadata?: Record<string, any>;
+  alt?: string; // Added for compatibility with demo UI
 }
 
 export interface TargetRoot {
@@ -34,6 +35,11 @@ export interface MixerConfig {
   tokens: string[];
   selectedTokenIndices: number[];
   customPrefix: string;
+  // Added fields to match demo state
+  usePrefix: boolean;
+  useDate: boolean;
+  useOriginal: boolean;
+  selectedTokens: string[];
 }
 
 export type PreviewStatus = 'ready' | 'auto_renamed' | 'error';
@@ -45,6 +51,9 @@ export interface PreviewOperation {
   status: PreviewStatus;
   statusReason?: string;
   targetPath: string;
+  // Added for compatibility
+  originalPath?: string;
+  newPath?: string;
 }
 
 export type ExecutionStatus = 'IDLE' | 'CONFIRMING' | 'EXECUTING' | 'DONE' | 'ERROR';
@@ -62,4 +71,13 @@ export interface ExecutionState {
 export interface AppConfig {
   sourceWatchers: string[];
   theme: 'light' | 'dark';
+}
+
+export interface TaskStatus {
+  id: string;
+  name: string;
+  progress: number;
+  total: number;
+  status: 'active' | 'completed';
+  timeRemaining?: string;
 }

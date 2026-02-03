@@ -1,0 +1,22 @@
+id,area,priority,task,description,depends_on,status,reviewed,notes
+T001,plan,P0,制定测试与评审计划,编写testing_review_plan.md定义范围/策略/交付物,,done,no,初版计划文档
+T002,plan,P1,完善Review模板,补充Review检查项与结论输出模板,T001,todo,no,纳入质量/安全/可测试性维度
+T003,backend,P0,后端测试框架基线,确认testing+testify使用方式与目录结构,,todo,no,建议tests/或internal/service下按包组织
+T004,backend,P0,预览引擎单测,覆盖命名规则/批次冲突/磁盘冲突/自动后缀,T003,todo,no,
+T005,backend,P0,执行引擎单测,覆盖移动/复制/进度计算/错误记录,T003,todo,no,
+T006,backend,P1,历史服务单测,覆盖写入/查询/撤销逻辑,T003,todo,no,
+T007,backend,P1,配置服务单测,覆盖CRUD/排序规则,T003,todo,no,
+T008,backend,P1,路径安全单测,覆盖合法/非法路径/边界情况,T003,todo,no,
+T009,backend,P2,handler API 轻量测试,使用httptest覆盖关键API路径,T003,todo,no,可先覆盖P0接口
+T010,frontend,P0,前端测试框架基线,引入Vitest+RTL配置与示例,,todo,no,参考vite生态
+T011,frontend,P0,文件列表与预览组件单测,覆盖展示/冲突标识/交互行为,T010,todo,no,
+T012,frontend,P0,执行流程页面单测,覆盖任务创建/进度显示/完成反馈,T010,todo,no,
+T013,frontend,P1,历史列表与撤销单测,覆盖分页/详情/撤销触发,T010,todo,no,
+T014,frontend,P1,系统配置页面单测,覆盖源目录/预设/目标根目录管理,T010,todo,no,
+T015,frontend,P2,API 适配层单测,使用mock验证请求/响应映射,T010,todo,no,
+T016,review,P0,后端实现对照评审,对照backend_plan.md检查功能完整性,,todo,no,输出问题清单与建议
+T017,review,P0,前端实现对照评审,对照frontend_plan.md检查功能完整性,,todo,no,输出问题清单与建议
+T018,review,P1,错误处理与日志评审,核查统一错误格式与日志记录,T016,todo,no,
+T019,review,P1,安全与边界评审,核查路径校验/文件系统访问安全,T016,todo,no,
+T020,review,P1,可测试性评审,评估依赖注入/模块边界是否易测,T016,todo,no,
+T021,review,P2,评审总结与跟进,汇总问题并更新修复任务,,todo,no,

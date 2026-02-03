@@ -65,6 +65,10 @@ const DEFAULT_MIXER_CONFIG: MixerConfig = {
   tokens: [],
   selectedTokenIndices: [],
   customPrefix: '',
+  usePrefix: true,
+  useDate: true,
+  useOriginal: false,
+  selectedTokens: [],
 };
 
 const DEFAULT_EXECUTION_STATE: ExecutionState = {

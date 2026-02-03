@@ -1,33 +1,36 @@
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { FileGrid } from './features/file-explorer/FileGrid';
-import { PatternMixer } from './features/pattern-mixer/PatternMixer';
-import { ExecutionView } from './features/execution/ExecutionView';
+import Layout from './components/Layout';
+import { Dashboard } from './features/dashboard/Dashboard';
 
 const queryClient = new QueryClient();
 
 function App() {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'config' | 'history'>('dashboard');
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="h-screen bg-gray-100 flex flex-col">
-        <header className="bg-white shadow px-6 py-4 z-10">
-          <h1 className="text-xl font-bold text-gray-800">SortFlow</h1>
-        </header>
-        <main className="flex-1 flex overflow-hidden">
-          <div className="flex-1 flex flex-col min-w-0 p-4">
-             <div className="bg-white rounded shadow flex-1 overflow-hidden flex flex-col">
-                <FileGrid />
-             </div>
+      <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+        {activeTab === 'dashboard' && <Dashboard />}
+        {activeTab === 'config' && (
+          <div className="flex items-center justify-center h-full text-slate-500">
+            <div className="text-center">
+              <span className="material-symbols-outlined text-6xl opacity-20 mb-4 block">settings</span>
+              <p className="text-lg font-medium">Configuration Panel</p>
+              <p className="text-sm opacity-60">Coming soon.</p>
+            </div>
           </div>
-          <div className="w-96 bg-white shadow-l border-l flex flex-col overflow-y-auto z-20">
-             <div className="p-4 flex-1">
-               <PatternMixer />
-             </div>
-             <div className="sticky bottom-0 bg-white z-30">
-               <ExecutionView />
-             </div>
+        )}
+        {activeTab === 'history' && (
+          <div className="flex items-center justify-center h-full text-slate-500">
+            <div className="text-center">
+              <span className="material-symbols-outlined text-6xl opacity-20 mb-4 block">history</span>
+              <p className="text-lg font-medium">History Log is empty.</p>
+              <p className="text-sm opacity-60">Operations you perform will appear here.</p>
+            </div>
           </div>
-        </main>
-      </div>
+        )}
+      </Layout>
     </QueryClientProvider>
   );
 }
