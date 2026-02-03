@@ -51,10 +51,11 @@ func (e *PreviewEngine) GeneratePreview(files []dto.FileInfo, rules dto.RenameRu
 }
 
 func (e *PreviewEngine) buildName(file dto.FileInfo, rules dto.RenameRules) string {
-	base := file.Name
-	if !rules.UseOriginal {
-		base = strings.TrimSuffix(file.Name, filepath.Ext(file.Name))
+	if rules.UseOriginal {
+		return file.Name
 	}
+
+	base := strings.TrimSuffix(file.Name, filepath.Ext(file.Name))
 	name := fmt.Sprintf("%s%s%s", rules.Prefix, base, rules.Suffix)
 	return name + filepath.Ext(file.Name)
 }
