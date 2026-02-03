@@ -1,49 +1,50 @@
 id,phase,priority,task,description,depends_on,status,reviewed,notes
-B001,1,P0,FastAPI项目初始化,创建backend/目录结构和main.py入口文件,,todo,no,参考backend_plan.md目录结构
-B002,1,P0,依赖配置,创建requirements.txt添加所有依赖,B001,todo,no,fastapi/uvicorn/pydantic/pillow/sqlite等
-B003,1,P0,环境配置,创建app/core/config.py使用pydantic-settings,B001,todo,no,DATABASE_URL/ALLOWED_ROOT_PATHS等
-B004,1,P0,SQLite数据库初始化,创建app/core/database.py数据库连接和表结构,B003,todo,no,source_watchers/target_roots/presets/history/tasks表
-B005,1,P0,Pydantic Schema定义,创建app/schemas/目录下所有Schema文件,B001,todo,no,config/file/preview/execute/history
-B006,1,P0,路由汇总,创建app/api/router.py汇总所有路由,B001,todo,no,
-B007,1,P1,CORS中间件,在main.py中配置CORS允许前端跨域访问,B001,todo,no,
-B008,1,P1,依赖注入,创建app/api/deps.py定义公共依赖,B004,todo,no,get_db等
-B009,2,P0,路径安全校验,创建app/core/security.py实现路径验证函数,B003,todo,no,validate_path防止路径遍历
-B010,2,P0,文件系统服务,创建app/services/file_system.py文件扫描服务,"B004,B009",todo,no,scan_directory/get_file_info
-B011,2,P0,GET /files/list接口,创建app/api/endpoints/files.py文件列表接口,B010,todo,no,支持path和recursive参数
-B012,2,P0,缩略图服务,在file_system.py中添加缩略图生成功能,B010,todo,no,使用Pillow生成WebP格式
-B013,2,P0,GET /files/thumbnail接口,在files.py中添加缩略图接口,B012,todo,no,返回image/webp
-B014,2,P0,预览计算引擎,创建app/services/preview_engine.py预览计算核心逻辑,B010,todo,no,build_name/detect_conflict/add_suffix
-B015,2,P0,POST /preview接口,创建app/api/endpoints/preview.py预览接口,B014,todo,no,返回预览结果和冲突状态
-B016,2,P0,执行引擎,创建app/services/execution_engine.py文件移动/复制逻辑,B010,todo,no,move_file/copy_file/update_progress
-B017,2,P0,任务模型,创建app/models/task.py任务状态模型,B004,todo,no,id/status/progress/logs
-B018,2,P0,POST /organize/execute接口,创建app/api/endpoints/organize.py执行接口,"B016,B017",todo,no,创建任务并后台执行
-B019,2,P0,GET /tasks/{id}接口,创建app/api/endpoints/tasks.py任务进度接口,B017,todo,no,返回进度和日志
-B020,2,P1,元数据提取服务,创建app/services/metadata.py EXIF提取,B010,todo,no,使用pillow/exif库
-B021,2,P1,GET /files/metadata接口,在files.py中添加元数据接口,B020,todo,no,返回EXIF信息
+B001,1,P0,Go项目初始化,创建backend/目录结构和cmd/server/main.go入口文件,,todo,no,参考backend_plan.md目录结构
+B002,1,P0,依赖配置,创建go.mod添加所有依赖,B001,todo,no,gin/gorm/viper/imaging/sqlite等
+B003,1,P0,环境配置,创建internal/config/config.go使用viper加载配置,B001,todo,no,DATABASE_URL/ALLOWED_ROOT_PATHS等
+B004,1,P0,SQLite数据库初始化,创建internal/config/database.go数据库连接和GORM自动迁移,B003,todo,no,source_watchers/target_roots/presets/histories/tasks表
+B005,1,P0,DTO定义,创建internal/dto/目录下所有DTO文件,B001,todo,no,config/file/preview/execute/history
+B006,1,P0,路由汇总,创建internal/api/router.go汇总所有路由,B001,todo,no,
+B007,1,P1,CORS中间件,创建internal/api/middleware/cors.go配置CORS,B001,todo,no,
+B008,1,P1,依赖注入,在router.go中注入db和config依赖,B004,todo,no,
+B009,2,P0,路径安全校验,创建internal/pkg/security/path.go实现路径验证函数,B003,todo,no,ValidatePath防止路径遍历
+B010,2,P0,文件系统服务,创建internal/service/file_system.go文件扫描服务,B004 B009,todo,no,ScanDirectory/GetFileInfo
+B011,2,P0,GET /files/list接口,创建internal/api/handler/files.go文件列表接口,B010,todo,no,支持path和recursive参数
+B012,2,P0,缩略图服务,创建internal/pkg/thumbnail/generator.go缩略图生成功能,B010,todo,no,使用imaging库生成WebP格式
+B013,2,P0,GET /files/thumbnail接口,在files.go中添加缩略图接口,B012,todo,no,返回image/webp
+B014,2,P0,预览计算引擎,创建internal/service/preview_engine.go预览计算核心逻辑,B010,todo,no,BuildName/DetectConflict/AddSuffix
+B015,2,P0,POST /preview接口,创建internal/api/handler/preview.go预览接口,B014,todo,no,返回预览结果和冲突状态
+B016,2,P0,执行引擎,创建internal/service/execution_engine.go文件移动/复制逻辑,B010,todo,no,MoveFile/CopyFile/UpdateProgress
+B017,2,P0,任务模型,创建internal/model/task.go任务状态模型,B004,todo,no,ID/Status/Progress/Logs
+B018,2,P0,POST /organize/execute接口,创建internal/api/handler/organize.go执行接口,B016 B017,todo,no,创建任务并用goroutine后台执行
+B019,2,P0,GET /tasks/{id}接口,创建internal/api/handler/tasks.go任务进度接口,B017,todo,no,返回进度和日志
+B020,2,P1,元数据提取服务,创建internal/service/metadata.go EXIF提取,B010,todo,no,使用goexif库
+B021,2,P1,GET /files/metadata接口,在files.go中添加元数据接口,B020,todo,no,返回EXIF信息
 B022,2,P2,冲突检测单元测试,为preview_engine编写单元测试,B014,todo,no,测试批次冲突和磁盘冲突场景
-B023,3,P0,GET /system/config接口,创建app/api/endpoints/system.py系统配置接口,B004,todo,no,返回watchers/targets/presets
-B024,3,P1,配置服务,创建app/services/config_service.py配置CRUD逻辑,B004,todo,no,
-B025,3,P1,预设模型,创建app/models/preset.py预设数据模型,B004,todo,no,id/name/icon/color/targetSubPath/defaultPrefix/order
-B026,3,P1,目标根目录模型,创建app/models/target.py目标根目录模型,B004,todo,no,id/name/path/icon
-B027,3,P1,POST /system/watchers接口,在system.py中添加源目录接口,B024,todo,no,验证路径存在且可访问
-B028,3,P1,DELETE /system/watchers接口,在system.py中添加删除源目录接口,B024,todo,no,
-B029,3,P1,POST /system/presets接口,在system.py中添加创建预设接口,"B024,B025",todo,no,
-B030,3,P1,PUT /system/presets/{id}接口,在system.py中添加更新预设接口,"B024,B025",todo,no,
-B031,3,P1,DELETE /system/presets/{id}接口,在system.py中添加删除预设接口,"B024,B025",todo,no,
-B032,3,P1,POST /system/targets接口,在system.py中添加创建目标接口,"B024,B026",todo,no,
-B033,3,P1,PUT /system/targets/{id}接口,在system.py中添加更新目标接口,"B024,B026",todo,no,
-B034,3,P1,DELETE /system/targets/{id}接口,在system.py中添加删除目标接口,"B024,B026",todo,no,
-B035,3,P2,PUT /system/presets/reorder接口,在system.py中添加预设排序接口,B025,todo,no,更新order字段
-B036,4,P1,历史记录模型,创建app/models/history.py历史记录模型,B004,todo,no,History和HistoryFile两个表
-B037,4,P1,历史记录服务,创建app/services/history_service.py历史CRUD逻辑,B036,todo,no,
-B038,4,P1,执行引擎写入历史,在execution_engine中完成后写入历史记录,"B016,B036",todo,no,
-B039,4,P1,GET /history接口,创建app/api/endpoints/history.py历史列表接口,B037,todo,no,支持分页和筛选
-B040,4,P1,POST /history/{id}/undo接口,在history.py中添加撤销接口,B037,todo,no,检查canUndo并执行回滚
-B041,4,P2,GET /history/{id}接口,在history.py中添加历史详情接口,B037,todo,no,返回完整文件列表
-B042,4,P2,DELETE /history接口,在history.py中添加清理历史接口,B037,todo,no,清理指定时间之前的记录
-B043,5,P1,异步文件操作,使用asyncio/线程池优化文件操作性能,B016,todo,no,
+B023,3,P0,GET /system/config接口,创建internal/api/handler/system.go系统配置接口,B004,todo,no,返回watchers/targets/presets
+B024,3,P1,配置服务,创建internal/service/config_service.go配置CRUD逻辑,B004,todo,no,
+B025,3,P1,预设模型,创建internal/model/preset.go预设数据模型,B004,todo,no,ID/Name/Icon/Color/TargetSubPath/DefaultPrefix/Order
+B026,3,P1,目标根目录模型,创建internal/model/target.go目标根目录模型,B004,todo,no,ID/Name/Path/Icon
+B027,3,P1,POST /system/watchers接口,在system.go中添加源目录接口,B024,todo,no,验证路径存在且可访问
+B028,3,P1,DELETE /system/watchers接口,在system.go中添加删除源目录接口,B024,todo,no,
+B029,3,P1,POST /system/presets接口,在system.go中添加创建预设接口,B024 B025,todo,no,
+B030,3,P1,PUT /system/presets/{id}接口,在system.go中添加更新预设接口,B024 B025,todo,no,
+B031,3,P1,DELETE /system/presets/{id}接口,在system.go中添加删除预设接口,B024 B025,todo,no,
+B032,3,P1,POST /system/targets接口,在system.go中添加创建目标接口,B024 B026,todo,no,
+B033,3,P1,PUT /system/targets/{id}接口,在system.go中添加更新目标接口,B024 B026,todo,no,
+B034,3,P1,DELETE /system/targets/{id}接口,在system.go中添加删除目标接口,B024 B026,todo,no,
+B035,3,P2,PUT /system/presets/reorder接口,在system.go中添加预设排序接口,B025,todo,no,更新Order字段
+B036,4,P1,历史记录模型,创建internal/model/history.go历史记录模型,B004,todo,no,History和HistoryFile两个表
+B037,4,P1,历史记录服务,创建internal/service/history_service.go历史CRUD逻辑,B036,todo,no,
+B038,4,P1,执行引擎写入历史,在execution_engine中完成后写入历史记录,B016 B036,todo,no,
+B039,4,P1,GET /history接口,创建internal/api/handler/history.go历史列表接口,B037,todo,no,支持分页和筛选
+B040,4,P1,POST /history/{id}/undo接口,在history.go中添加撤销接口,B037,todo,no,检查CanUndo并执行回滚
+B041,4,P2,GET /history/{id}接口,在history.go中添加历史详情接口,B037,todo,no,返回完整文件列表
+B042,4,P2,DELETE /history接口,在history.go中添加清理历史接口,B037,todo,no,清理指定时间之前的记录
+B043,5,P1,并发文件操作,使用goroutine+channel优化批量文件操作性能,B016,todo,no,实现worker pool模式
 B044,5,P1,缩略图缓存,实现基于文件修改时间的缩略图缓存,B012,todo,no,
-B045,5,P2,统一错误处理,添加全局异常处理器统一错误响应格式,B001,todo,no,
-B046,5,P2,日志系统,配置结构化日志记录,B001,todo,no,使用loguru或标准logging
-B047,5,P2,Dockerfile,创建Dockerfile用于容器化部署,B002,todo,no,
-B048,5,P2,WebSocket任务进度,可选实现/ws/tasks/{id}实时进度推送,B019,todo,no,
+B045,5,P2,统一错误处理,添加全局错误处理中间件统一错误响应格式,B001,todo,no,
+B046,5,P2,日志系统,配置结构化日志记录,B001,todo,no,使用zap或zerolog
+B047,5,P2,Dockerfile,创建Dockerfile用于容器化部署(多阶段构建),B002,todo,no,
+B048,5,P2,WebSocket任务进度,可选实现/ws/tasks/{id}实时进度推送,B019,todo,no,使用gorilla/websocket
+B049,5,P2,优雅关闭,实现graceful shutdown确保任务正常完成,B001,todo,no,
