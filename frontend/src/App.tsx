@@ -2,13 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { FileGrid } from './features/file-explorer/FileGrid';
 import { PatternMixer } from './features/pattern-mixer/PatternMixer';
 import { ExecutionView } from './features/execution/ExecutionView';
-import { useAppStore } from './store/useAppStore';
 
 const queryClient = new QueryClient();
 
 function App() {
-  const { config } = useAppStore();
-
   return (
     <QueryClientProvider client={queryClient}>
       <div className="h-screen bg-gray-100 flex flex-col">
