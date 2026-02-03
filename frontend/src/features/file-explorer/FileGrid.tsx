@@ -3,9 +3,11 @@ import { fileService } from '../../services/fileService';
 import { useAppStore } from '../../store/useAppStore';
 import { useEffect } from 'react';
 import { FileCard } from './FileCard';
+import { useFileSelection } from '../../hooks/useFileSelection';
 
 export const FileGrid = () => {
-  const { setFiles, files, currentPath, selectedIds, toggleSelection, clearSelection } = useAppStore();
+  const { setFiles, files, currentPath } = useAppStore();
+  const { selectedIds, handleSelection, clearSelection } = useFileSelection();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['files', currentPath],
@@ -17,35 +19,6 @@ export const FileGrid = () => {
       setFiles(data.files);
     }
   }, [data, setFiles]);
-
-  const handleFileClick = (e: React.MouseEvent, fileId: string) => {
-    // Basic selection logic - can be moved to a hook later
-    const isMulti = e.ctrlKey || e.metaKey;
-    const isRange = e.shiftKey;
-
-    // If clicking on background (not implemented here yet) or just plain click without modifiers
-    if (!isMulti && !isRange) {
-        // This logic mimics standard OS behavior:
-        // Single click selects only this one (clears others)
-        // Note: The store's toggleSelection logic is a bit simple, we might need to enhance it
-        // For now, let's just clear if not multi
-        if (selectedIds.size > 0 && !selectedIds.has(fileId)) {
-             // In a real OS, if you click one, others deserialize.
-             // But for now, we rely on toggleSelection.
-             // Let's manually handle "select only this one"
-             clearSelection();
-             toggleSelection(fileId, true, false);
-             return;
-        }
-        if (selectedIds.size > 1 && selectedIds.has(fileId)) {
-             clearSelection();
-             toggleSelection(fileId, true, false);
-             return;
-        }
-    }
-
-    toggleSelection(fileId, isMulti, isRange);
-  };
 
   if (isLoading) return <div className="p-8 text-center text-gray-500">Loading files...</div>;
   if (error) return <div className="p-8 text-center text-red-500">Error loading files</div>;
@@ -62,7 +35,7 @@ export const FileGrid = () => {
                 key={file.id}
                 file={file}
                 selected={selectedIds.has(file.id)}
-                onClick={(e) => handleFileClick(e, file.id)}
+                onClick={(e) => handleSelection(file.id, e)}
             />
         ))}
         </div>
