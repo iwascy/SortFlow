@@ -1,6 +1,7 @@
 package security
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -17,7 +18,10 @@ func ValidatePath(path string, allowedRoots []string) bool {
 			continue
 		}
 		cleanRoot := filepath.Clean(rootAbs)
-		if strings.HasPrefix(cleanPath, cleanRoot) {
+		if cleanPath == cleanRoot {
+			return true
+		}
+		if strings.HasPrefix(cleanPath, cleanRoot+string(os.PathSeparator)) {
 			return true
 		}
 	}

@@ -1,12 +1,12 @@
 id,area,priority,task,description,depends_on,status,reviewed,notes
-B001,backend,P0,后端测试框架基线,确认testing+testify使用方式与目录结构,,todo,no,建议tests/或internal/service下按包组织
-B002,backend,P0,预览引擎单测,覆盖命名规则/批次冲突/磁盘冲突/自动后缀,B001,todo,no,
-B003,backend,P0,执行引擎单测,覆盖移动/复制/进度计算/错误记录,B001,todo,no,
-B004,backend,P1,历史服务单测,覆盖写入/查询/撤销逻辑,B001,todo,no,
-B005,backend,P1,配置服务单测,覆盖CRUD/排序规则,B001,todo,no,
-B006,backend,P1,路径安全单测,覆盖合法/非法路径/边界情况,B001,todo,no,
-B007,backend,P2,handler API 轻量测试,使用httptest覆盖关键API路径,B001,todo,no,可先覆盖P0接口
-B008,review,P0,后端实现对照评审,对照backend_plan.md检查功能完整性,,todo,no,输出问题清单与建议
+B001,backend,P0,后端测试框架基线,确认testing+testify使用方式与目录结构,,done,no,使用internal/service下测试结构；环境限制无法获取testify
+B002,backend,P0,预览引擎单测,覆盖命名规则/批次冲突/磁盘冲突/自动后缀,B001,done,no,已补充命名规则/批次冲突/磁盘冲突/自动后缀与保留原名测试
+B003,backend,P0,执行引擎单测,覆盖移动/复制/进度计算/错误记录,B001,done,no,新增执行引擎单测覆盖移动复制/进度/错误日志/历史记录
+B004,backend,P1,历史服务单测,覆盖写入/查询/撤销逻辑,B001,done,no,新增历史服务单测覆盖创建/查询/撤销/清理
+B005,backend,P1,配置服务单测,覆盖CRUD/排序规则,B001,done,no,新增配置服务单测覆盖预设/目标/监控路径
+B006,backend,P1,路径安全单测,覆盖合法/非法路径/边界情况,B001,done,no,新增路径校验单测并修复根目录前缀误判
+B007,backend,P2,handler API 轻量测试,使用httptest覆盖关键API路径,B001,done,no,覆盖预览与历史查询接口
+B008,review,P0,后端实现对照评审,对照backend_plan.md检查功能完整性,,done,no,已输出评审记录与问题清单
 B009,review,P1,错误处理与日志评审,核查统一错误格式与日志记录,B008,todo,no,
 B010,review,P1,安全与边界评审,核查路径校验/文件系统访问安全,B008,todo,no,
 B011,review,P1,可测试性评审,评估依赖注入/模块边界是否易测,B008,todo,no,
