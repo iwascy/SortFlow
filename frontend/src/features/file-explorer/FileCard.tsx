@@ -7,6 +7,7 @@ interface FileCardProps {
   selected?: boolean;
   onClick?: (e: React.MouseEvent) => void;
   onDoubleClick?: (e: React.MouseEvent) => void;
+  animationDelay?: string;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -14,49 +15,53 @@ export const FileCard: React.FC<FileCardProps> = ({
   selected,
   onClick,
   onDoubleClick,
+  animationDelay,
 }) => {
   return (
     <div
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      style={{ animationDelay }}
       className={cn(
-        "group relative flex flex-col p-2 rounded-lg border transition-all cursor-pointer select-none",
+        "group relative flex flex-col gap-4 p-4 rounded-[2rem] transition-all cursor-pointer border animate-in fade-in zoom-in-95 fill-mode-both",
         selected
-          ? "bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500 ring-opacity-50"
-          : "bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md"
+          ? 'bg-primary/5 border-primary ring-1 ring-primary/20 shadow-2xl active-glow-soft'
+          : 'bg-surface-dark border-border-dark hover:border-primary/50 hover:shadow-xl hover:scale-[1.02]'
       )}
     >
-      <div className="aspect-square bg-gray-100 rounded-md overflow-hidden relative mb-2">
-        {file.thumbnailUrl ? (
+      <div className="w-full aspect-square rounded-[1.5rem] overflow-hidden relative bg-slate-900 shadow-inner">
+        {file.thumbnail ? (
           <img
-            src={file.thumbnailUrl}
-            alt={file.name}
-            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-            loading="lazy"
+            src={file.thumbnail}
+            alt={file.alt || file.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <span className="material-symbols-outlined text-gray-300 text-5xl">
+            <span className="material-symbols-outlined text-gray-500 text-5xl">
               {file.type === 'dir' ? 'folder' : 'description'}
             </span>
           </div>
         )}
-
-        {/* Selection Checkmark Overlay */}
+        <div className="absolute top-4 right-4 px-3 py-1 rounded-xl bg-black/60 backdrop-blur-xl text-[9px] font-black text-white border border-white/10">
+            {file.type}
+        </div>
         {selected && (
-            <div className="absolute top-2 right-2 bg-indigo-600 rounded-full p-0.5 text-white shadow-sm">
-                <span className="material-symbols-outlined text-sm font-bold block" style={{ fontSize: '16px' }}>check</span>
+            <div className="absolute top-4 left-4 bg-primary text-slate-900 p-2 rounded-2xl shadow-xl animate-in zoom-in-50">
+                <span className="material-symbols-outlined text-[16px] font-black filled">check</span>
             </div>
         )}
       </div>
-
-      <div className="flex flex-col min-w-0">
-        <span className="truncate text-sm font-medium text-gray-900 group-hover:text-indigo-700" title={file.name}>
-          {file.name}
-        </span>
-        <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-          <span>{file.type.toUpperCase()}</span>
-          <span>{(file.size / 1024 / 1024).toFixed(1)} MB</span>
+      <div className="px-2 min-w-0">
+        <p className={cn(
+            "text-[12px] font-black truncate mb-1 transition-colors",
+            selected ? 'text-primary' : 'text-white group-hover:text-primary'
+        )}>
+            {file.name}
+        </p>
+        <div className="flex justify-between text-[10px] font-bold text-text-secondary/40">
+           <span className="font-mono">{file.size}</span>
+           <span className="uppercase tracking-widest">{file.type}</span>
         </div>
       </div>
     </div>

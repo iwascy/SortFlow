@@ -1,0 +1,4 @@
+node_modules/
+dist/
+preview_output.log
+dev_output.log

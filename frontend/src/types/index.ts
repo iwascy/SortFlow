@@ -2,19 +2,19 @@ export interface FileItem {
   id: string;
   name: string;
   path: string;
-  size: number;
+  size: string;
   type: string;
   mtime: number;
-  thumbnailUrl?: string;
+  thumbnail?: string;
   metadata?: Record<string, any>;
-  alt?: string; // Added for compatibility with demo UI
+  alt?: string;
 }
 
 export interface TargetRoot {
   id: string;
   path: string;
   name: string;
-  icon?: string;
+  icon: string;
 }
 
 export interface CategoryPreset {
@@ -23,7 +23,7 @@ export interface CategoryPreset {
   icon: string;
   color: string;
   targetSubPath: string;
-  defaultPrefix?: string;
+  defaultPrefix: string;
 }
 
 export interface MixerConfig {
@@ -45,15 +45,15 @@ export interface MixerConfig {
 export type PreviewStatus = 'ready' | 'auto_renamed' | 'error';
 
 export interface PreviewOperation {
+  id: string;
   fileId: string;
   originalName: string;
   newName: string;
-  status: PreviewStatus;
+  status: PreviewStatus | 'pending' | 'conflict' | 'success';
   statusReason?: string;
   targetPath: string;
-  // Added for compatibility
-  originalPath?: string;
-  newPath?: string;
+  originalPath: string;
+  newPath: string;
 }
 
 export type ExecutionStatus = 'IDLE' | 'CONFIRMING' | 'EXECUTING' | 'DONE' | 'ERROR';
