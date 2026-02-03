@@ -40,17 +40,30 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
     console.warn(`[Mock API] No mock found for ${method} ${endpoint}`);
   }
 
+  const headers = new Headers(options.headers || {});
+  if (!headers.has('Content-Type') && typeof options.body === 'string') {
+    headers.set('Content-Type', 'application/json');
+  }
+
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, await response.text());
+    const errorText = await response.text();
+    throw new ApiError(response.status, errorText || response.statusText);
   }
 
-  return response.json();
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  return text as unknown as T;
 }

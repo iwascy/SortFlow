@@ -4,7 +4,7 @@ import { PRESETS, TARGET_ROOTS } from '../../constants';
 import { cn } from '../../utils/cn';
 
 export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute }) => {
-  const { selectedIds, mixerConfig, updateMixerConfig, files } = useAppStore();
+  const { selectedIds, mixerConfig, updateMixerConfig, files, isPreviewLoading } = useAppStore();
 
   const activeTargetId = mixerConfig.targetRootId || TARGET_ROOTS[0].id;
   const activePresetId = mixerConfig.presetId || PRESETS[0].id;
@@ -154,7 +154,7 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
           <span className="text-white font-mono">{selectedIds.size * 22.4} MB</span>
         </div>
         <button
-          disabled={selectedIds.size === 0}
+          disabled={selectedIds.size === 0 || isPreviewLoading}
           onClick={onExecute}
           className="w-full bg-primary hover:bg-cyan-400 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed text-slate-900 font-black py-6 rounded-[2.5rem] shadow-2xl shadow-primary/30 transition-all flex items-center justify-center gap-4 active:scale-95 group overflow-hidden"
         >

@@ -14,6 +14,7 @@ export const PatternMixer: React.FC = () => {
     // Only calculate preview if files are selected
     if (selectedIds.size === 0) {
         setPreviewOps([]);
+        setIsPreviewLoading(false);
         return;
     }
 

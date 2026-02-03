@@ -2,52 +2,36 @@ import React, { useEffect, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 
 export const ExecutionOverlay: React.FC = () => {
-  const { executionState, setExecutionState, files, setFiles, selectedIds, setSelectedIds } = useAppStore();
+  const { executionState, setExecutionState } = useAppStore();
   const [isDone, setIsDone] = useState(false);
 
-  // Simulate execution progress when active
   useEffect(() => {
-    if (executionState.status === 'EXECUTING') {
-      setIsDone(false);
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.floor(Math.random() * 10) + 5;
+    setIsDone(executionState.status === 'DONE');
+  }, [executionState.status]);
 
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          setIsDone(true);
-
-          // Remove processed files
-          setFiles(files.filter(f => !selectedIds.has(f.id)));
-          setSelectedIds(new Set());
-
-          setExecutionState({ status: 'DONE', progress: 100, logs: [...executionState.logs, "Execution Complete."] });
-        } else {
-            const newLog = `Block ${Math.ceil(progress/10)} written to destination`;
-            setExecutionState({ progress, logs: [...executionState.logs, newLog].slice(-6) });
-        }
-      }, 300);
-      return () => clearInterval(interval);
-    }
-  }, [executionState.status === 'EXECUTING']);
-
-  if (executionState.status !== 'EXECUTING' && executionState.status !== 'DONE') {
+  if (executionState.status !== 'EXECUTING' && executionState.status !== 'DONE' && executionState.status !== 'ERROR') {
       return null;
   }
+
+  const isError = executionState.status === 'ERROR';
+  const isExecuting = executionState.status === 'EXECUTING';
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center h-full w-full bg-[#0a1315] p-12 overflow-hidden">
       <div className="w-full max-w-2xl space-y-12 animate-in fade-in zoom-in-95 duration-500 fill-mode-both">
         <div className="text-center space-y-4">
           <div className="inline-flex size-24 rounded-full bg-primary/10 items-center justify-center ring-4 ring-primary/5 mb-6">
-            <span className={`material-symbols-outlined text-5xl text-primary ${!isDone ? 'animate-spin' : 'filled'}`}>
-              {isDone ? 'done_all' : 'sync'}
+            <span className={`material-symbols-outlined text-5xl text-primary ${isExecuting ? 'animate-spin' : 'filled'}`}>
+              {isError ? 'error' : isDone ? 'done_all' : 'sync'}
             </span>
           </div>
-          <h2 className="text-4xl font-black text-white tracking-tighter">{isDone ? 'Archive Sync Complete' : 'Organizing Data'}</h2>
+          <h2 className="text-4xl font-black text-white tracking-tighter">
+            {isError ? 'Execution Failed' : isDone ? 'Archive Sync Complete' : 'Organizing Data'}
+          </h2>
           <p className="text-text-secondary font-medium">
-             Relocating assets to <span className="text-white font-mono">Target Storage</span>
+             {isError ? (executionState.error || 'Unable to complete the execution.') : (
+               <>Relocating assets to <span className="text-white font-mono">Target Storage</span></>
+             )}
           </p>
         </div>
         <div className="space-y-4 bg-surface-dark/50 p-8 rounded-[2rem] border border-border-dark shadow-2xl">
@@ -69,7 +53,7 @@ export const ExecutionOverlay: React.FC = () => {
              </div>
            ))}
         </div>
-        {isDone && (
+        {(isDone || isError) && (
           <button
             onClick={() => setExecutionState({ status: 'IDLE', logs: [], progress: 0 })}
             className="w-full bg-primary text-slate-900 font-black py-5 rounded-[2rem] shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95 animate-in fade-in zoom-in-95 delay-300 fill-mode-both"

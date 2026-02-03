@@ -166,7 +166,7 @@ func (s *HistoryService) DeleteBefore(cutoff time.Time) (int64, error) {
 		ids = append(ids, history.ID)
 	}
 
-	return len(ids), s.db.Transaction(func(tx *gorm.DB) error {
+	return int64(len(ids)), s.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("history_id IN ?", ids).Delete(&model.HistoryFile{}).Error; err != nil {
 			return fmt.Errorf("delete history files: %w", err)
 		}
