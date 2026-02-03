@@ -7,22 +7,24 @@ interface StatusIndicatorProps {
   showLabel?: boolean;
 }
 
-const STATUS_CONFIG = {
-  ready: { color: 'text-emerald-600', icon: 'check_circle', label: 'OK' },
-  auto_renamed: { color: 'text-amber-600', icon: 'warning', label: 'Renamed' },
-  error: { color: 'text-red-600', icon: 'error', label: 'Error' }
+const STATUS_CONFIG: Record<PreviewStatus | string, { color: string, icon: string, label: string }> = {
+  ready: { color: 'text-primary', icon: 'check_circle', label: 'OK' },
+  auto_renamed: { color: 'text-amber-400', icon: 'warning', label: 'Renamed' },
+  error: { color: 'text-red-400', icon: 'error', label: 'Error' },
+  pending: { color: 'text-text-secondary', icon: 'pending', label: 'Pending' },
+  success: { color: 'text-primary', icon: 'check_circle', label: 'Success' },
 };
 
 export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, className = '', showLabel = false }) => {
-  const config = STATUS_CONFIG[status];
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.ready;
 
   return (
     <div className={`flex items-center gap-1 ${config.color} ${className}`} title={config.label}>
-      <span className="material-symbols-outlined text-[20px] leading-none">
+      <span className="material-symbols-outlined text-[18px] leading-none filled">
         {config.icon}
       </span>
       {showLabel && (
-          <span className="text-sm font-medium">{config.label}</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">{config.label}</span>
       )}
     </div>
   );
