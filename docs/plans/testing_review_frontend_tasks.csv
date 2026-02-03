@@ -1,0 +1,12 @@
+id,area,priority,task,description,depends_on,status,reviewed,notes
+F001,frontend,P0,前端测试框架基线,引入Vitest+RTL配置与示例,,todo,no,参考vite生态
+F002,frontend,P0,文件列表与预览组件单测,覆盖展示/冲突标识/交互行为,F001,todo,no,
+F003,frontend,P0,执行流程页面单测,覆盖任务创建/进度显示/完成反馈,F001,todo,no,
+F004,frontend,P1,历史列表与撤销单测,覆盖分页/详情/撤销触发,F001,todo,no,
+F005,frontend,P1,系统配置页面单测,覆盖源目录/预设/目标根目录管理,F001,todo,no,
+F006,frontend,P2,API 适配层单测,使用mock验证请求/响应映射,F001,todo,no,
+F007,review,P0,前端实现对照评审,对照frontend_plan.md检查功能完整性,,todo,no,输出问题清单与建议
+F008,review,P1,错误处理与日志评审,核查前端错误提示与日志一致性,F007,todo,no,
+F009,review,P1,安全与边界评审,核查输入校验与文件名展示安全,F007,todo,no,
+F010,review,P1,可测试性评审,评估组件/逻辑是否易测,F007,todo,no,
+F011,review,P2,评审总结与跟进,汇总问题并更新修复任务,,todo,no,
