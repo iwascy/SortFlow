@@ -1,0 +1,7 @@
+{
+  "name": "SortFlow v2.0",
+  "description": "A world-class AI-powered file management and sorting dashboard designed for photographers and creators to organize large media libraries with intelligent renaming and automated workflows.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
