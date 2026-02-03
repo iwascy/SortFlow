@@ -13,16 +13,33 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	previewHandler := handler.NewPreviewHandler()
 	organizeHandler := handler.NewOrganizeHandler(db)
 	taskHandler := handler.NewTaskHandler(db)
-	systemHandler := handler.NewSystemHandler(db)
+	systemHandler := handler.NewSystemHandler(db, cfg)
+	historyHandler := handler.NewHistoryHandler(db)
 
 	r.GET("/files/list", fileHandler.ListFiles)
 	r.GET("/files/thumbnail", fileHandler.Thumbnail)
+	r.GET("/files/metadata", fileHandler.Metadata)
 
 	r.POST("/preview", previewHandler.GeneratePreview)
 
 	r.POST("/organize/execute", organizeHandler.Execute)
 
 	r.GET("/tasks/:id", taskHandler.GetTask)
+	r.GET("/ws/tasks/:id", taskHandler.StreamTask)
 
 	r.GET("/system/config", systemHandler.GetConfig)
+	r.POST("/system/watchers", systemHandler.AddWatcher)
+	r.DELETE("/system/watchers", systemHandler.RemoveWatcher)
+	r.POST("/system/presets", systemHandler.CreatePreset)
+	r.PUT("/system/presets/:id", systemHandler.UpdatePreset)
+	r.DELETE("/system/presets/:id", systemHandler.DeletePreset)
+	r.PUT("/system/presets/reorder", systemHandler.ReorderPresets)
+	r.POST("/system/targets", systemHandler.CreateTarget)
+	r.PUT("/system/targets/:id", systemHandler.UpdateTarget)
+	r.DELETE("/system/targets/:id", systemHandler.DeleteTarget)
+
+	r.GET("/history", historyHandler.ListHistories)
+	r.GET("/history/:id", historyHandler.GetHistory)
+	r.POST("/history/:id/undo", historyHandler.UndoHistory)
+	r.DELETE("/history", historyHandler.DeleteHistory)
 }

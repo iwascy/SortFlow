@@ -22,3 +22,26 @@ type PresetDTO struct {
 	DefaultPrefix string `json:"defaultPrefix"`
 	Order         int    `json:"order"`
 }
+
+type WatcherRequest struct {
+	Path string `json:"path" binding:"required"`
+}
+
+type PresetRequest struct {
+	Name          string `json:"name" binding:"required"`
+	Icon          string `json:"icon"`
+	Color         string `json:"color"`
+	TargetSubPath string `json:"targetSubPath"`
+	DefaultPrefix string `json:"defaultPrefix"`
+	Order         int    `json:"order"`
+}
+
+type PresetReorderRequest struct {
+	IDs []string `json:"ids" binding:"required"`
+}
+
+type TargetRequest struct {
+	Name string `json:"name" binding:"required"`
+	Path string `json:"path" binding:"required"`
+	Icon string `json:"icon"`
+}

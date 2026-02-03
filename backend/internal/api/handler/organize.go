@@ -24,6 +24,9 @@ func (h *OrganizeHandler) Execute(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if request.Action == "" && len(request.Actions) > 0 {
+		request.Action = request.Actions[0].Operation
+	}
 
 	task, err := h.engine.CreateTask()
 	if err != nil {
@@ -31,7 +34,7 @@ func (h *OrganizeHandler) Execute(c *gin.Context) {
 		return
 	}
 
-	h.engine.Execute(task.ID, request.Actions)
+	h.engine.Execute(task.ID, request)
 
 	c.JSON(http.StatusAccepted, dto.ExecuteResponse{TaskID: task.ID})
 }

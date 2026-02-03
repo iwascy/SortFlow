@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"sortflow/internal/config"
+	"sortflow/internal/dto"
 	"sortflow/internal/pkg/security"
 	"sortflow/internal/pkg/thumbnail"
 	"sortflow/internal/service"
@@ -59,4 +60,27 @@ func (h *FileHandler) Thumbnail(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, "image/webp", data)
+}
+
+func (h *FileHandler) Metadata(c *gin.Context) {
+	path := c.Query("path")
+	if path == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "path is required"})
+		return
+	}
+	if !security.ValidatePath(path, h.cfg.AllowedRootPaths) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "path not allowed"})
+		return
+	}
+
+	attributes, err := service.ExtractMetadata(path)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.MetadataResponse{
+		Path:       path,
+		Attributes: attributes,
+	})
 }

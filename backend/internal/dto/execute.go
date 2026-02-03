@@ -7,7 +7,11 @@ type OrganizeAction struct {
 }
 
 type ExecuteRequest struct {
-	Actions []OrganizeAction `json:"actions"`
+	Actions      []OrganizeAction `json:"actions"`
+	Action       string           `json:"action"`
+	PresetID     string           `json:"presetId"`
+	TargetRootID string           `json:"targetRootId"`
+	TargetPath   string           `json:"targetPath"`
 }
 
 type ExecuteResponse struct {
