@@ -16,9 +16,9 @@ F014,2,P0,文件卡片组件,创建src/features/file-explorer/FileCard.tsx单个
 F015,2,P0,文件选择Hook,创建src/hooks/useFileSelection.ts文件选择逻辑,F003,todo,no,单击/Ctrl+点击/Shift连选
 F016,2,P0,StatusIndicator组件,创建src/components/StatusIndicator.tsx状态指示灯,,todo,no,ready/auto_renamed/error三种状态
 F017,2,P0,PatternMixer组件,创建src/features/pattern-mixer/PatternMixer.tsx重命名配置器,F003,todo,no,整合所有Mixer子组件
-F018,2,P0,TokenSelector组件,创建src/features/pattern-mixer/TokenSelector.tsx分词选择器,F017,todo,no,显示分词按钮列表
+F018,2,P0,TokenSelector组件,创建src/features/pattern-mixer/TokenSelector.tsx分词选择器,F017,done,yes,显示分词按钮列表
 F019,2,P0,分词工具函数,创建src/utils/tokenizer.ts智能分词算法,,todo,no,分隔符/驼峰/数字分离/去噪/去重
-F020,2,P0,PreviewList组件,创建src/features/pattern-mixer/PreviewList.tsx预览列表,"F016,F010",todo,no,显示预览结果和状态指示
+F020,2,P0,PreviewList组件,创建src/features/pattern-mixer/PreviewList.tsx预览列表,"F016,F010",done,yes,显示预览结果和状态指示
 F021,2,P0,useDebounce Hook,创建src/hooks/useDebounce.ts防抖Hook,,todo,no,用于预览请求防抖
 F022,2,P0,ExecutionView组件,创建src/features/execution/ExecutionView.tsx执行视图,"F007,F011",todo,no,进度条/日志/完成状态
 F023,2,P0,useTaskPolling Hook,创建src/hooks/usePolling.ts任务轮询Hook,F011,todo,no,500ms轮询任务进度
