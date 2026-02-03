@@ -1,27 +1,27 @@
 id,phase,priority,task,description,depends_on,status,reviewed,notes
-B001,1,P0,Go项目初始化,创建backend/目录结构和cmd/server/main.go入口文件,,todo,no,参考backend_plan.md目录结构
-B002,1,P0,依赖配置,创建go.mod添加所有依赖,B001,todo,no,gin/gorm/viper/imaging/sqlite等
-B003,1,P0,环境配置,创建internal/config/config.go使用viper加载配置,B001,todo,no,DATABASE_URL/ALLOWED_ROOT_PATHS等
-B004,1,P0,SQLite数据库初始化,创建internal/config/database.go数据库连接和GORM自动迁移,B003,todo,no,source_watchers/target_roots/presets/histories/tasks表
-B005,1,P0,DTO定义,创建internal/dto/目录下所有DTO文件,B001,todo,no,config/file/preview/execute/history
-B006,1,P0,路由汇总,创建internal/api/router.go汇总所有路由,B001,todo,no,
+B001,1,P0,Go项目初始化,创建backend/目录结构和cmd/server/main.go入口文件,,done,no,参考backend_plan.md目录结构
+B002,1,P0,依赖配置,创建go.mod添加所有依赖,B001,done,no,gin/gorm/viper/imaging/sqlite等
+B003,1,P0,环境配置,创建internal/config/config.go使用viper加载配置,B001,done,no,DATABASE_URL/ALLOWED_ROOT_PATHS等
+B004,1,P0,SQLite数据库初始化,创建internal/config/database.go数据库连接和GORM自动迁移,B003,done,no,source_watchers/target_roots/presets/histories/tasks表
+B005,1,P0,DTO定义,创建internal/dto/目录下所有DTO文件,B001,done,no,config/file/preview/execute/history
+B006,1,P0,路由汇总,创建internal/api/router.go汇总所有路由,B001,done,no,
 B007,1,P1,CORS中间件,创建internal/api/middleware/cors.go配置CORS,B001,todo,no,
 B008,1,P1,依赖注入,在router.go中注入db和config依赖,B004,todo,no,
-B009,2,P0,路径安全校验,创建internal/pkg/security/path.go实现路径验证函数,B003,todo,no,ValidatePath防止路径遍历
-B010,2,P0,文件系统服务,创建internal/service/file_system.go文件扫描服务,B004 B009,todo,no,ScanDirectory/GetFileInfo
-B011,2,P0,GET /files/list接口,创建internal/api/handler/files.go文件列表接口,B010,todo,no,支持path和recursive参数
-B012,2,P0,缩略图服务,创建internal/pkg/thumbnail/generator.go缩略图生成功能,B010,todo,no,使用imaging库生成WebP格式
-B013,2,P0,GET /files/thumbnail接口,在files.go中添加缩略图接口,B012,todo,no,返回image/webp
-B014,2,P0,预览计算引擎,创建internal/service/preview_engine.go预览计算核心逻辑,B010,todo,no,BuildName/DetectConflict/AddSuffix
-B015,2,P0,POST /preview接口,创建internal/api/handler/preview.go预览接口,B014,todo,no,返回预览结果和冲突状态
-B016,2,P0,执行引擎,创建internal/service/execution_engine.go文件移动/复制逻辑,B010,todo,no,MoveFile/CopyFile/UpdateProgress
-B017,2,P0,任务模型,创建internal/model/task.go任务状态模型,B004,todo,no,ID/Status/Progress/Logs
-B018,2,P0,POST /organize/execute接口,创建internal/api/handler/organize.go执行接口,B016 B017,todo,no,创建任务并用goroutine后台执行
-B019,2,P0,GET /tasks/{id}接口,创建internal/api/handler/tasks.go任务进度接口,B017,todo,no,返回进度和日志
+B009,2,P0,路径安全校验,创建internal/pkg/security/path.go实现路径验证函数,B003,done,no,ValidatePath防止路径遍历
+B010,2,P0,文件系统服务,创建internal/service/file_system.go文件扫描服务,B004 B009,done,no,ScanDirectory/GetFileInfo
+B011,2,P0,GET /files/list接口,创建internal/api/handler/files.go文件列表接口,B010,done,no,支持path和recursive参数
+B012,2,P0,缩略图服务,创建internal/pkg/thumbnail/generator.go缩略图生成功能,B010,done,no,使用imaging库生成WebP格式
+B013,2,P0,GET /files/thumbnail接口,在files.go中添加缩略图接口,B012,done,no,返回image/webp
+B014,2,P0,预览计算引擎,创建internal/service/preview_engine.go预览计算核心逻辑,B010,done,no,BuildName/DetectConflict/AddSuffix
+B015,2,P0,POST /preview接口,创建internal/api/handler/preview.go预览接口,B014,done,no,返回预览结果和冲突状态
+B016,2,P0,执行引擎,创建internal/service/execution_engine.go文件移动/复制逻辑,B010,done,no,MoveFile/CopyFile/UpdateProgress
+B017,2,P0,任务模型,创建internal/model/task.go任务状态模型,B004,done,no,ID/Status/Progress/Logs
+B018,2,P0,POST /organize/execute接口,创建internal/api/handler/organize.go执行接口,B016 B017,done,no,创建任务并用goroutine后台执行
+B019,2,P0,GET /tasks/{id}接口,创建internal/api/handler/tasks.go任务进度接口,B017,done,no,返回进度和日志
 B020,2,P1,元数据提取服务,创建internal/service/metadata.go EXIF提取,B010,todo,no,使用goexif库
 B021,2,P1,GET /files/metadata接口,在files.go中添加元数据接口,B020,todo,no,返回EXIF信息
 B022,2,P2,冲突检测单元测试,为preview_engine编写单元测试,B014,todo,no,测试批次冲突和磁盘冲突场景
-B023,3,P0,GET /system/config接口,创建internal/api/handler/system.go系统配置接口,B004,todo,no,返回watchers/targets/presets
+B023,3,P0,GET /system/config接口,创建internal/api/handler/system.go系统配置接口,B004,done,no,返回watchers/targets/presets
 B024,3,P1,配置服务,创建internal/service/config_service.go配置CRUD逻辑,B004,todo,no,
 B025,3,P1,预设模型,创建internal/model/preset.go预设数据模型,B004,todo,no,ID/Name/Icon/Color/TargetSubPath/DefaultPrefix/Order
 B026,3,P1,目标根目录模型,创建internal/model/target.go目标根目录模型,B004,todo,no,ID/Name/Path/Icon
