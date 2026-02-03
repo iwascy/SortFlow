@@ -8,20 +8,20 @@ F006,1,P0,Modal组件,创建src/components/Modal.tsx模态框基础组件,F005,d
 F007,1,P0,ConfirmDialog组件,创建src/components/ConfirmDialog.tsx确认对话框,F006,done,yes,基于Modal组件封装
 F008,1,P1,configService,创建src/services/configService.ts配置相关API,F004,todo,no,getConfig/addWatcher/removeWatcher等
 F009,1,P1,fileService,创建src/services/fileService.ts文件相关API,F004,done,yes,listFiles/getThumbnail/getMetadata
-F010,1,P1,previewService,创建src/services/previewService.ts预览API,F004,todo,no,calculatePreview
-F011,1,P1,executeService,创建src/services/executeService.ts执行API,F004,todo,no,execute/getTaskProgress
+F010,1,P1,previewService,创建src/services/previewService.ts预览API,F004,done,yes,calculatePreview
+F011,1,P1,executeService,创建src/services/executeService.ts执行API,F004,done,yes,execute/getTaskProgress
 F012,1,P1,historyService,创建src/services/historyService.ts历史API,F004,todo,no,getHistory/getDetail/undo
 F013,2,P0,文件网格组件,创建src/features/file-explorer/FileGrid.tsx文件网格展示,"F003,F009",done,yes,支持虚拟滚动
 F014,2,P0,文件卡片组件,创建src/features/file-explorer/FileCard.tsx单个文件卡片,F013,done,yes,显示缩略图/名称/大小/类型
-F015,2,P0,文件选择Hook,创建src/hooks/useFileSelection.ts文件选择逻辑,F003,todo,no,单击/Ctrl+点击/Shift连选
-F016,2,P0,StatusIndicator组件,创建src/components/StatusIndicator.tsx状态指示灯,,todo,no,ready/auto_renamed/error三种状态
-F017,2,P0,PatternMixer组件,创建src/features/pattern-mixer/PatternMixer.tsx重命名配置器,F003,todo,no,整合所有Mixer子组件
+F015,2,P0,文件选择Hook,创建src/hooks/useFileSelection.ts文件选择逻辑,F003,done,yes,单击/Ctrl+点击/Shift连选
+F016,2,P0,StatusIndicator组件,创建src/components/StatusIndicator.tsx状态指示灯,,done,yes,ready/auto_renamed/error三种状态
+F017,2,P0,PatternMixer组件,创建src/features/pattern-mixer/PatternMixer.tsx重命名配置器,F003,done,yes,整合所有Mixer子组件
 F018,2,P0,TokenSelector组件,创建src/features/pattern-mixer/TokenSelector.tsx分词选择器,F017,done,yes,显示分词按钮列表
-F019,2,P0,分词工具函数,创建src/utils/tokenizer.ts智能分词算法,,todo,no,分隔符/驼峰/数字分离/去噪/去重
+F019,2,P0,分词工具函数,创建src/utils/tokenizer.ts智能分词算法,,done,yes,分隔符/驼峰/数字分离/去噪/去重
 F020,2,P0,PreviewList组件,创建src/features/pattern-mixer/PreviewList.tsx预览列表,"F016,F010",done,yes,显示预览结果和状态指示
-F021,2,P0,useDebounce Hook,创建src/hooks/useDebounce.ts防抖Hook,,todo,no,用于预览请求防抖
-F022,2,P0,ExecutionView组件,创建src/features/execution/ExecutionView.tsx执行视图,"F007,F011",todo,no,进度条/日志/完成状态
-F023,2,P0,useTaskPolling Hook,创建src/hooks/usePolling.ts任务轮询Hook,F011,todo,no,500ms轮询任务进度
+F021,2,P0,useDebounce Hook,创建src/hooks/useDebounce.ts防抖Hook,,done,yes,用于预览请求防抖
+F022,2,P0,ExecutionView组件,创建src/features/execution/ExecutionView.tsx执行视图,"F007,F011",done,yes,进度条/日志/完成状态
+F023,2,P0,useTaskPolling Hook,创建src/hooks/usePolling.ts任务轮询Hook,F011,done,yes,500ms轮询任务进度
 F024,2,P1,框选功能,创建src/features/file-explorer/SelectionOverlay.tsx框选覆盖层,F015,todo,no,使用react-selecto
 F025,2,P1,快捷键支持,在useFileSelection中添加Ctrl+A和Esc快捷键,F015,todo,no,
 F026,2,P1,AdvancedRules组件,创建src/features/pattern-mixer/AdvancedRules.tsx高级规则,F017,todo,no,正则提取/保留后N位等

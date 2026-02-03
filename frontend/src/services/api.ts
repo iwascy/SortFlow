@@ -2,9 +2,11 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  status: number;
+  constructor(status: number, message: string) {
     super(message);
     this.name = 'ApiError';
+    this.status = status;
   }
 }
 

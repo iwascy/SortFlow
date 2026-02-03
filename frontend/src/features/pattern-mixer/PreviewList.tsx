@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { StatusIndicator } from '../../components/StatusIndicator';
 
 export const PreviewList: React.FC = () => {
     const { previewOps, isPreviewLoading } = useAppStore();
@@ -26,10 +27,7 @@ export const PreviewList: React.FC = () => {
                             <td className="p-2 text-gray-400">→</td>
                             <td className="p-2 font-medium truncate max-w-[150px]">{op.newName}</td>
                             <td className="p-2">
-                                <span className={`inline-block w-2 h-2 rounded-full ${
-                                    op.status === 'ready' ? 'bg-green-500' :
-                                    op.status === 'auto_renamed' ? 'bg-yellow-500' : 'bg-red-500'
-                                }`}></span>
+                                <StatusIndicator status={op.status} showLabel={false} />
                             </td>
                         </tr>
                     ))}

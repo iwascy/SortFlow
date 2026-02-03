@@ -1,18 +1,27 @@
 export function tokenize(filename: string): string[] {
-  // Simple tokenizer: split by delimiters, camelCase, numbers
-  const tokens: string[] = [];
-
   // Remove extension
   const parts = filename.split('.');
   if (parts.length > 1) parts.pop();
   const name = parts.join('.');
 
-  // Split by common delimiters
-  const rawTokens = name.split(/[-_.\s]+/);
+  // 1. Split by common delimiters
+  let tokens = name.split(/[-_.\s]+/);
 
-  rawTokens.forEach(t => {
-    if (t) tokens.push(t);
+  // 2. Split by CamelCase
+  tokens = tokens.flatMap(token => {
+    // Split at uppercase letters
+    return token.split(/(?=[A-Z])/);
   });
 
-  return tokens;
+  // 3. Separate numbers
+  tokens = tokens.flatMap(token => {
+    // Split keeping the numbers
+    return token.split(/(\d+)/);
+  });
+
+  // 4. Denoise and Filter
+  tokens = tokens.filter(t => t && t.trim().length > 0);
+
+  // 5. Deduplicate
+  return Array.from(new Set(tokens));
 }
