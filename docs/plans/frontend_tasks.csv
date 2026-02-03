@@ -1,18 +1,18 @@
 id,phase,priority,task,description,depends_on,status,reviewed,notes
-F001,1,P0,项目结构重构,将demo代码迁移到规范的src/目录结构,,todo,no,参考frontend_plan.md目录结构
-F002,1,P0,TypeScript类型定义,创建src/types/index.ts定义所有接口类型,,todo,no,FileItem/TargetRoot/CategoryPreset/PreviewOperation等
-F003,1,P0,Zustand Store实现,创建src/store/useAppStore.ts实现全局状态管理,F002,todo,no,包含所有状态和Actions
-F004,1,P0,API基础封装,创建src/services/api.ts封装fetch请求,F002,todo,no,统一错误处理和响应解析
-F005,1,P0,Button组件,创建src/components/Button.tsx通用按钮,,todo,no,支持variant/size/disabled等props
-F006,1,P0,Modal组件,创建src/components/Modal.tsx模态框基础组件,F005,todo,no,支持isOpen/onClose/title等props
-F007,1,P0,ConfirmDialog组件,创建src/components/ConfirmDialog.tsx确认对话框,F006,todo,no,基于Modal组件封装
+F001,1,P0,项目结构重构,将demo代码迁移到规范的src/目录结构,,done,yes,参考frontend_plan.md目录结构
+F002,1,P0,TypeScript类型定义,创建src/types/index.ts定义所有接口类型,,done,yes,FileItem/TargetRoot/CategoryPreset/PreviewOperation等
+F003,1,P0,Zustand Store实现,创建src/store/useAppStore.ts实现全局状态管理,F002,done,yes,包含所有状态和Actions
+F004,1,P0,API基础封装,创建src/services/api.ts封装fetch请求,F002,done,yes,统一错误处理和响应解析
+F005,1,P0,Button组件,创建src/components/Button.tsx通用按钮,,done,yes,支持variant/size/disabled等props
+F006,1,P0,Modal组件,创建src/components/Modal.tsx模态框基础组件,F005,done,yes,支持isOpen/onClose/title等props
+F007,1,P0,ConfirmDialog组件,创建src/components/ConfirmDialog.tsx确认对话框,F006,done,yes,基于Modal组件封装
 F008,1,P1,configService,创建src/services/configService.ts配置相关API,F004,todo,no,getConfig/addWatcher/removeWatcher等
-F009,1,P1,fileService,创建src/services/fileService.ts文件相关API,F004,todo,no,listFiles/getThumbnail/getMetadata
+F009,1,P1,fileService,创建src/services/fileService.ts文件相关API,F004,done,yes,listFiles/getThumbnail/getMetadata
 F010,1,P1,previewService,创建src/services/previewService.ts预览API,F004,todo,no,calculatePreview
 F011,1,P1,executeService,创建src/services/executeService.ts执行API,F004,todo,no,execute/getTaskProgress
 F012,1,P1,historyService,创建src/services/historyService.ts历史API,F004,todo,no,getHistory/getDetail/undo
-F013,2,P0,文件网格组件,创建src/features/file-explorer/FileGrid.tsx文件网格展示,"F003,F009",todo,no,支持虚拟滚动
-F014,2,P0,文件卡片组件,创建src/features/file-explorer/FileCard.tsx单个文件卡片,F013,todo,no,显示缩略图/名称/大小/类型
+F013,2,P0,文件网格组件,创建src/features/file-explorer/FileGrid.tsx文件网格展示,"F003,F009",done,yes,支持虚拟滚动
+F014,2,P0,文件卡片组件,创建src/features/file-explorer/FileCard.tsx单个文件卡片,F013,done,yes,显示缩略图/名称/大小/类型
 F015,2,P0,文件选择Hook,创建src/hooks/useFileSelection.ts文件选择逻辑,F003,todo,no,单击/Ctrl+点击/Shift连选
 F016,2,P0,StatusIndicator组件,创建src/components/StatusIndicator.tsx状态指示灯,,todo,no,ready/auto_renamed/error三种状态
 F017,2,P0,PatternMixer组件,创建src/features/pattern-mixer/PatternMixer.tsx重命名配置器,F003,todo,no,整合所有Mixer子组件
