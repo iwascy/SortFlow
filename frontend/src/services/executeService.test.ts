@@ -9,20 +9,32 @@ describe('executeService', () => {
 
   it('executeTask sends correct payload', async () => {
     const requestSpy = vi.spyOn(api, 'request').mockResolvedValue({ taskId: 'task-1' });
-    const fileIds = ['1', '2'];
-    const previewOps = [{ id: '1' }];
+    const payload = {
+      actions: [
+        { sourcePath: '/src/a.jpg', targetPath: '/dst/a.jpg', operation: 'move' as const },
+      ],
+      action: 'move' as const,
+      presetId: 'preset-1',
+      targetRootId: 'target-1',
+      targetPath: '/dst'
+    };
 
-    await executeService.executeTask(fileIds, previewOps);
+    await executeService.executeTask(payload);
 
-    expect(requestSpy).toHaveBeenCalledWith('/execute/start', expect.objectContaining({
+    expect(requestSpy).toHaveBeenCalledWith('/organize/execute', expect.objectContaining({
       method: 'POST',
-      body: JSON.stringify({ fileIds, previewOps }),
+      body: JSON.stringify(payload),
     }));
   });
 
   it('getTaskProgress calls correct endpoint', async () => {
-    const requestSpy = vi.spyOn(api, 'request').mockResolvedValue({});
+    const requestSpy = vi.spyOn(api, 'request').mockResolvedValue({
+      id: 'task-1',
+      status: 'running',
+      progress: 0.4,
+      logs: ''
+    });
     await executeService.getTaskProgress('task-1');
-    expect(requestSpy).toHaveBeenCalledWith('/execute/status/task-1', expect.objectContaining({ method: 'GET' }));
+    expect(requestSpy).toHaveBeenCalledWith('/tasks/task-1', expect.objectContaining({ method: 'GET' }));
   });
 });

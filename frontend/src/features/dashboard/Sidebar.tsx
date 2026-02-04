@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { cn } from '../../utils/cn';
 
 export const Sidebar: React.FC = () => {
-  const { files, currentPath, setCurrentPath } = useAppStore();
-
-  const paths = useMemo(() => Array.from(new Set(files.map(f => f.path))), [files]);
+  const { files, currentPath, setCurrentPath, config } = useAppStore();
+  const paths = config.sourceWatchers || [];
 
   return (
     <aside className="w-full lg:w-64 border-r border-border-dark flex flex-col shrink-0 overflow-y-auto bg-background-dark animate-in fade-in slide-in-from-left duration-700">
@@ -35,10 +34,13 @@ export const Sidebar: React.FC = () => {
                 "ml-auto opacity-50 font-mono",
                 currentPath === path ? 'text-slate-900' : ''
               )}>
-                {files.filter(f => f.path === path).length}
+                {currentPath === path ? files.length : ''}
               </span>
             </button>
           ))}
+          {paths.length === 0 && (
+            <div className="text-xs text-slate-500">No watchers configured.</div>
+          )}
         </nav>
       </div>
     </aside>

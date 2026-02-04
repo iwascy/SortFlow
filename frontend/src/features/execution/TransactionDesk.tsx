@@ -1,53 +1,36 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { PRESETS, TARGET_ROOTS } from '../../constants';
 import { cn } from '../../utils/cn';
+import { buildPreviewOps, getTargetDir } from '../../utils/preview';
 
 export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute }) => {
-  const { selectedIds, mixerConfig, updateMixerConfig, files, isPreviewLoading } = useAppStore();
+  const {
+    selectedIds,
+    mixerConfig,
+    updateMixerConfig,
+    files,
+    isPreviewLoading,
+    presets,
+    targetRoots,
+    setPreviewOps,
+  } = useAppStore();
 
-  const activeTargetId = mixerConfig.targetRootId || TARGET_ROOTS[0].id;
-  const activePresetId = mixerConfig.presetId || PRESETS[0].id;
+  const activeTargetId = mixerConfig.targetRootId || targetRoots[0]?.id;
+  const activePresetId = mixerConfig.presetId || presets[0]?.id;
 
-  const activeTarget = TARGET_ROOTS.find(t => t.id === activeTargetId) || TARGET_ROOTS[0];
-  const activePreset = PRESETS.find(p => p.id === activePresetId) || PRESETS[0];
+  const activeTarget = targetRoots.find(t => t.id === activeTargetId) || targetRoots[0];
+  const activePreset = presets.find(p => p.id === activePresetId) || presets[0];
 
   const selectedFiles = useMemo(() => files.filter(f => selectedIds.has(f.id)), [files, selectedIds]);
 
-  // Calculate Preview Ops (Derived State)
   const previewOps = useMemo(() => {
-    return selectedFiles.map((f, idx) => {
-      const dateStr = new Date().toISOString().split('T')[0];
-      let nameParts: string[] = [];
-
-      if (mixerConfig.usePrefix) nameParts.push(activePreset.defaultPrefix || 'PRE_');
-      if (mixerConfig.useDate) nameParts.push(dateStr);
-
-      if (mixerConfig.useOriginal) {
-        nameParts.push(f.name.split('.')[0]);
-      } else if (mixerConfig.selectedTokens && mixerConfig.selectedTokens.length > 0) {
-        nameParts.push(...mixerConfig.selectedTokens);
-      } else {
-        nameParts.push(activePreset.name.toUpperCase());
-      }
-
-      const baseName = nameParts.join('_').replace(/_{2,}/g, '_');
-      const finalSuffix = selectedFiles.length > 1 ? `_${String(idx + 1).padStart(3, '0')}` : '';
-
-      // Handle extension
-      const ext = f.name.split('.').pop() || '';
-      const extension = f.type === 'RAW' ? 'ARW' : ext.toLowerCase();
-
-      return {
-        id: f.id,
-        originalName: f.name,
-        newName: `${baseName}${finalSuffix}.${extension}`,
-        originalPath: f.path,
-        newPath: `${activeTarget.path}/${activePreset.targetSubPath}/`,
-        status: 'pending'
-      };
-    });
+    if (!activePreset || !activeTarget) return [];
+    return buildPreviewOps(selectedFiles, mixerConfig, activePreset, activeTarget);
   }, [selectedFiles, mixerConfig, activePreset, activeTarget]);
+
+  useEffect(() => {
+    setPreviewOps(previewOps);
+  }, [previewOps, setPreviewOps]);
 
   return (
     <aside className="w-full lg:w-[420px] bg-background-dark border-l border-border-dark flex flex-col shrink-0 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] z-20 animate-in fade-in slide-in-from-right duration-700 fill-mode-both">
@@ -55,7 +38,7 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">Transaction Desk</h3>
           <div className="flex flex-col items-end">
-            <span className="text-4xl font-black text-primary leading-none tabular-nums">{selectedIds.size}</span>
+            <span className="text-4xl font-black text-primary leading-none tabular-nums">{previewOps.length}</span>
             <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Items Queued</span>
           </div>
         </div>
@@ -66,7 +49,7 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
             <span className="material-symbols-outlined text-[16px] filled">storage</span> Destination Root
           </label>
           <div className="grid grid-cols-1 gap-2">
-            {TARGET_ROOTS.map((t, idx) => (
+            {targetRoots.map((t, idx) => (
               <button
                 key={t.id}
                 onClick={() => updateMixerConfig({ targetRootId: t.id })}
@@ -100,7 +83,7 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
             <span className="material-symbols-outlined text-[16px] filled">category</span> Organizational Class
           </label>
           <div className="grid grid-cols-2 gap-3">
-            {PRESETS.map((p, idx) => (
+            {presets.map((p, idx) => (
               <button
                 key={p.id}
                 onClick={() => updateMixerConfig({ presetId: p.id })}
@@ -128,7 +111,7 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
           <div className="flex items-center gap-3 text-white">
             <span className="material-symbols-outlined text-primary text-[20px] filled">account_tree</span>
             <p className="text-[11px] font-mono break-all leading-relaxed opacity-80 italic">
-              {activeTarget.path}/{activePreset.targetSubPath}/
+              {activeTarget && activePreset ? `${getTargetDir(activePreset, activeTarget)}/` : '--'}
             </p>
           </div>
         </div>
@@ -137,13 +120,13 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
         <div className="space-y-3 animate-in fade-in duration-500">
           <span className="text-[9px] font-black text-text-secondary uppercase tracking-widest">Queue Preview</span>
           <div className="space-y-3">
-            {selectedFiles.slice(0, 3).map((f, i) => (
-              <div key={f.id} className="flex items-center gap-4 text-[10px] text-text-secondary/60 animate-in fade-in slide-in-from-right" style={{ animationDelay: `${i * 100}ms` }}>
+            {previewOps.slice(0, 3).map((op, i) => (
+              <div key={op.id} className="flex items-center gap-4 text-[10px] text-text-secondary/60 animate-in fade-in slide-in-from-right" style={{ animationDelay: `${i * 100}ms` }}>
                 <span className="size-2 rounded-full bg-primary/40 shrink-0" />
-                <span className="truncate flex-1">{previewOps[i]?.newName}</span>
+                <span className="truncate flex-1">{op.newName}</span>
               </div>
             ))}
-            {selectedFiles.length > 3 && <p className="text-[9px] text-text-secondary/40 pl-6 italic">+ {selectedIds.size - 3} more items</p>}
+            {previewOps.length > 3 && <p className="text-[9px] text-text-secondary/40 pl-6 italic">+ {previewOps.length - 3} more items</p>}
           </div>
         </div>
       </div>
@@ -151,10 +134,10 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
       <div className="p-10 border-t border-border-dark bg-surface-dark/40 space-y-6 animate-in fade-in slide-in-from-bottom duration-700 delay-500 fill-mode-both">
         <div className="flex justify-between items-center text-[11px] font-black text-text-secondary uppercase tracking-widest">
           <span>Estimated Load</span>
-          <span className="text-white font-mono">{selectedIds.size * 22.4} MB</span>
+          <span className="text-white font-mono">{previewOps.length * 22.4} MB</span>
         </div>
         <button
-          disabled={selectedIds.size === 0 || isPreviewLoading}
+          disabled={previewOps.length === 0 || isPreviewLoading}
           onClick={onExecute}
           className="w-full bg-primary hover:bg-cyan-400 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed text-slate-900 font-black py-6 rounded-[2.5rem] shadow-2xl shadow-primary/30 transition-all flex items-center justify-center gap-4 active:scale-95 group overflow-hidden"
         >

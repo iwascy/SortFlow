@@ -30,6 +30,19 @@ func ValidatePath(path string, allowedRoots []string) bool {
 }
 
 func resolvePath(path string) (string, error) {
+	if path == "" {
+		return "", os.ErrInvalid
+	}
+	if path == "~" || strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err == nil {
+			if path == "~" {
+				path = home
+			} else {
+				path = filepath.Join(home, path[2:])
+			}
+		}
+	}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return "", err
@@ -41,10 +54,27 @@ func resolvePath(path string) (string, error) {
 	if !errors.Is(err, os.ErrNotExist) {
 		return "", err
 	}
-	parent := filepath.Dir(absPath)
-	parentResolved, parentErr := filepath.EvalSymlinks(parent)
-	if parentErr != nil {
-		return "", parentErr
+
+	// Walk up to the nearest existing ancestor to resolve symlinks,
+	// then rebuild the absolute path from there.
+	parent := absPath
+	for {
+		parent = filepath.Dir(parent)
+		if parent == "." || parent == string(os.PathSeparator) {
+			break
+		}
+		parentResolved, parentErr := filepath.EvalSymlinks(parent)
+		if parentErr == nil {
+			rel, relErr := filepath.Rel(parent, absPath)
+			if relErr != nil {
+				return absPath, nil
+			}
+			return filepath.Join(parentResolved, rel), nil
+		}
+		if !errors.Is(parentErr, os.ErrNotExist) {
+			return "", parentErr
+		}
 	}
-	return filepath.Join(parentResolved, filepath.Base(absPath)), nil
+
+	return absPath, nil
 }

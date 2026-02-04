@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -15,9 +17,11 @@ type Config struct {
 }
 
 func Load() *Config {
-	viper.SetDefault("port", 8000)
+	defaultRoots := []string{"/nas", "/mnt", "/Volumes", "/Users"}
+
+	viper.SetDefault("port", 8463)
 	viper.SetDefault("database_url", "sortflow.db")
-	viper.SetDefault("allowed_root_paths", []string{"/nas", "/mnt", "/Volumes"})
+	viper.SetDefault("allowed_root_paths", defaultRoots)
 	viper.SetDefault("thumbnail_size", 400)
 	viper.SetDefault("thumbnail_format", "webp")
 
@@ -28,14 +32,52 @@ func Load() *Config {
 		return &Config{
 			Port:             8000,
 			DatabaseURL:      "sortflow.db",
-			AllowedRootPaths: []string{"/nas", "/mnt", "/Volumes"},
+			AllowedRootPaths: defaultRoots,
 			ThumbnailSize:    400,
 			ThumbnailFormat:  "webp",
 		}
+	}
+	cfg.AllowedRootPaths = normalizeAllowedRootPaths(cfg.AllowedRootPaths)
+	if len(cfg.AllowedRootPaths) == 0 {
+		cfg.AllowedRootPaths = defaultRoots
+	}
+	if runtime.GOOS == "darwin" && !containsString(cfg.AllowedRootPaths, "/Users") {
+		cfg.AllowedRootPaths = append(cfg.AllowedRootPaths, "/Users")
 	}
 	return &cfg
 }
 
 func (c *Config) ServerAddr() string {
 	return fmt.Sprintf(":%d", c.Port)
+}
+
+func normalizeAllowedRootPaths(paths []string) []string {
+	normalized := make([]string, 0, len(paths))
+	for _, path := range paths {
+		value := strings.TrimSpace(path)
+		if value == "" {
+			continue
+		}
+		if strings.Contains(value, ",") {
+			parts := strings.Split(value, ",")
+			for _, part := range parts {
+				trimmed := strings.TrimSpace(part)
+				if trimmed != "" {
+					normalized = append(normalized, trimmed)
+				}
+			}
+			continue
+		}
+		normalized = append(normalized, value)
+	}
+	return normalized
+}
+
+func containsString(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }

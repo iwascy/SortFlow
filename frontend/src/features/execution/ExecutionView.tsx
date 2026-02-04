@@ -1,30 +1,90 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { executeService } from '../../services/executeService';
-import { usePolling } from '../../hooks/usePolling';
+import { executeService, toExecutionUpdate, type TaskResponse } from '../../services/executeService';
+import { buildPreviewOps, getTargetDir } from '../../utils/preview';
 
 export const ExecutionView: React.FC = () => {
-  const { executionState, setExecutionState, previewOps, selectedIds } = useAppStore();
+  const {
+    executionState,
+    setExecutionState,
+    previewOps,
+    selectedIds,
+    files,
+    mixerConfig,
+    presets,
+    targetRoots
+  } = useAppStore();
 
   const handleStart = async () => {
     if (executionState.status !== 'IDLE' && executionState.status !== 'DONE' && executionState.status !== 'ERROR') return;
 
-    setExecutionState({ status: 'EXECUTING', progress: 0, logs: [], processedFiles: 0, totalFiles: selectedIds.size });
+    const activeTargetId = mixerConfig.targetRootId || targetRoots[0]?.id;
+    const activePresetId = mixerConfig.presetId || presets[0]?.id;
+    const activeTarget = targetRoots.find(t => t.id === activeTargetId) || targetRoots[0];
+    const activePreset = presets.find(p => p.id === activePresetId) || presets[0];
+
+    if (!activeTarget || !activePreset) {
+      setExecutionState({ status: 'ERROR', error: 'Missing target or preset configuration.' });
+      return;
+    }
+
+    const computedPreviewOps = previewOps.length
+      ? previewOps
+      : buildPreviewOps(files.filter(f => selectedIds.has(f.id)), mixerConfig, activePreset, activeTarget);
+    const actions = computedPreviewOps
+      .filter(op => op.originalPath && op.newPath)
+      .map(op => ({
+        sourcePath: op.originalPath,
+        targetPath: op.newPath,
+        operation: 'move' as const,
+      }));
+
+    if (actions.length === 0) {
+      setExecutionState({ status: 'ERROR', error: 'No valid items queued for execution.' });
+      return;
+    }
+
+    setExecutionState({ status: 'EXECUTING', progress: 0, logs: [], processedFiles: 0, totalFiles: actions.length });
 
     try {
-        const { taskId } = await executeService.executeTask(Array.from(selectedIds), previewOps);
+        const targetPath = getTargetDir(activePreset, activeTarget);
+        const { taskId } = await executeService.executeTask({
+          actions,
+          action: 'move',
+          presetId: activePreset.id,
+          targetRootId: activeTarget.id,
+          targetPath
+        });
         setExecutionState({ taskId });
     } catch (e) {
         setExecutionState({ status: 'ERROR', error: 'Failed to start execution' });
     }
   };
 
-  usePolling(async () => {
-    if (executionState.status === 'EXECUTING' && executionState.taskId) {
-        const state = await executeService.getTaskProgress(executionState.taskId);
-        setExecutionState(state);
-    }
-  }, 1000, executionState.status === 'EXECUTING');
+  // Optional websocket stream to keep progress in sync
+  React.useEffect(() => {
+    if (executionState.status !== 'EXECUTING' || !executionState.taskId) return;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const wsUrl = baseUrl.replace(/^http/, 'ws') + `/ws/tasks/${executionState.taskId}`;
+    const ws = new WebSocket(wsUrl);
+    ws.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data) as TaskResponse | { error: string };
+        if ('error' in payload) {
+          setExecutionState({ status: 'ERROR', error: payload.error });
+          return;
+        }
+        const update = toExecutionUpdate(payload);
+        setExecutionState({ ...update, taskId: executionState.taskId });
+        if (update.status === 'DONE' || update.status === 'ERROR') {
+          ws.close();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    return () => ws.close();
+  }, [executionState.status, executionState.taskId, setExecutionState]);
 
   if (executionState.status === 'IDLE') {
       return (

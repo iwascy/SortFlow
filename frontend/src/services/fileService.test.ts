@@ -8,18 +8,30 @@ describe('fileService', () => {
   });
 
   it('listFiles calls api correctly', async () => {
-    const mockResponse = { files: [], parentPath: null };
-    const requestSpy = vi.spyOn(api, 'request').mockResolvedValue(mockResponse);
+    const mockResponse = {
+      files: [
+        {
+          id: '/some/path/file.jpg',
+          name: 'file.jpg',
+          path: '/some/path/file.jpg',
+          size: 1024,
+          modTime: new Date().toISOString(),
+          isDir: false
+        }
+      ]
+    };
+    const requestSpy = vi.spyOn(api, 'request').mockResolvedValue(mockResponse as any);
 
     const result = await fileService.listFiles('/some/path');
 
     expect(requestSpy).toHaveBeenCalledWith('/files/list?path=%2Fsome%2Fpath');
-    expect(result).toBe(mockResponse);
+    expect(result.files).toHaveLength(1);
+    expect(result.files[0].name).toBe('file.jpg');
   });
 
   it('getThumbnailUrl returns correct url', () => {
-    const url = fileService.getThumbnailUrl('123');
+    const url = fileService.getThumbnailUrl('/some/path/file.jpg');
     // We expect it to contain the endpoint. The base URL might vary but the suffix is constant.
-    expect(url).toContain('/files/thumbnail/123');
+    expect(url).toContain('/files/thumbnail?path=');
   });
 });

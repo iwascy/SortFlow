@@ -1,17 +1,16 @@
 import { registerMock } from './api';
-import type { FileItem } from '../types';
-
-const MOCK_FILES: FileItem[] = Array.from({ length: 50 }).map((_, i) => {
+const MOCK_FILES = Array.from({ length: 50 }).map((_, i) => {
   const type = ['jpg', 'png', 'mov', 'mp4', 'arw'][Math.floor(Math.random() * 5)];
-  const sizeMB = (Math.random() * 50 + 1).toFixed(1);
+  const sizeBytes = Math.floor((Math.random() * 50 + 1) * 1024 * 1024);
+  const fileName = `DSC_${1000 + i}.${type}`;
+  const fullPath = `/mock/source/${fileName}`;
   return {
-    id: `file-${i}`,
-    name: `DSC_${1000 + i}.${type}`,
-    path: `/mock/source/DSC_${1000 + i}.${type}`,
-    size: `${sizeMB}MB`,
-    type,
-    mtime: Date.now() - Math.floor(Math.random() * 10000000000),
-    thumbnail: `https://picsum.photos/200/200?random=${i}`, // Use placeholder images
+    id: fullPath,
+    name: fileName,
+    path: fullPath,
+    size: sizeBytes,
+    modTime: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString(),
+    isDir: false,
   };
 });
 
@@ -20,6 +19,60 @@ export function setupMocks() {
     return {
       files: MOCK_FILES,
       parentPath: '/mock/source'
+    };
+  });
+
+  registerMock('/system/config', 'GET', async () => {
+    return {
+      watchers: ['/mock/source'],
+      targets: [
+        { id: 'mock-target', name: 'Mock Target', path: '/mock/target', icon: 'dns' }
+      ],
+      presets: [
+        { id: 'mock-preset', name: 'Mock Preset', icon: 'category', color: 'primary', targetSubPath: 'Archive', defaultPrefix: 'MOCK_', order: 0 }
+      ]
+    };
+  });
+
+  registerMock('/history', 'GET', async () => {
+    return {
+      items: [],
+      page: 1,
+      pageSize: 20,
+      total: 0
+    };
+  });
+
+  registerMock('/preview', 'POST', async (options) => {
+    const body = JSON.parse(options?.body as string || '{}');
+    const { files, rules, targetPath } = body;
+
+    return {
+      results: (files || []).map((file: any) => {
+        const match = MOCK_FILES.find(f => f.id === file.id);
+        if (!match) return null;
+        const base = rules?.useOriginal ? match.name : `${rules?.prefix || ''}${match.name}${rules?.suffix || ''}`;
+        return {
+          fileId: match.id,
+          newName: base,
+          status: 'ready',
+          targetPath,
+        };
+      }).filter(Boolean)
+    };
+  });
+
+  registerMock('/organize/execute', 'POST', async () => {
+    return { taskId: 'task-123' };
+  });
+
+  registerMock('/tasks/task-123', 'GET', async () => {
+    const progress = Math.min(1, Math.random());
+    return {
+      id: 'task-123',
+      status: progress >= 1 ? 'completed' : 'running',
+      progress,
+      logs: 'Started task...\nProcessing file 1...\nProcessing file 2...'
     };
   });
 
@@ -48,23 +101,6 @@ export function setupMocks() {
         newPath: '/mock/target/' + newName
       };
     }).filter(Boolean);
-  });
-
-  registerMock('/execute/start', 'POST', async () => {
-    return { taskId: 'task-123' };
-  });
-
-  registerMock('/execute/status/task-123', 'GET', async () => {
-    // Random progress
-    const progress = Math.min(100, Math.floor(Math.random() * 100));
-    return {
-      status: progress === 100 ? 'DONE' : 'EXECUTING',
-      taskId: 'task-123',
-      progress,
-      totalFiles: 10,
-      processedFiles: Math.floor(progress / 10),
-      logs: ['Started task...', 'Processing file 1...', 'Processing file 2...']
-    };
   });
 
   console.log('Mocks initialized');

@@ -10,8 +10,7 @@ describe('FileCard', () => {
         path: '/root',
         type: 'file',
         size: '1.2MB',
-        createdAt: 0,
-        updatedAt: 0,
+        mtime: 0,
         thumbnail: '/thumb.png'
     };
 

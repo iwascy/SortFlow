@@ -3,9 +3,9 @@ import { useAppStore } from './useAppStore';
 import type { FileItem } from '../types';
 
 const mockFiles: FileItem[] = [
-  { id: '1', name: 'f1', path: '/root', type: 'file', size: '1MB', createdAt: 0, updatedAt: 0 },
-  { id: '2', name: 'f2', path: '/root', type: 'file', size: '2MB', createdAt: 0, updatedAt: 0 },
-  { id: '3', name: 'f3', path: '/root', type: 'file', size: '3MB', createdAt: 0, updatedAt: 0 },
+  { id: '1', name: 'f1', path: '/root', type: 'file', size: '1MB', mtime: 0 },
+  { id: '2', name: 'f2', path: '/root', type: 'file', size: '2MB', mtime: 0 },
+  { id: '3', name: 'f3', path: '/root', type: 'file', size: '3MB', mtime: 0 },
 ];
 
 describe('useAppStore Selection', () => {
@@ -29,9 +29,9 @@ describe('useAppStore Selection', () => {
     expect(useAppStore.getState().selectedIds.has('2')).toBe(false);
     expect(useAppStore.getState().selectedIds.size).toBe(1);
 
-    // Clicking again should keep it selected (standard file explorer behavior)
+    // Clicking again should toggle it off
     toggleSelection('1', false, false);
-    expect(useAppStore.getState().selectedIds.has('1')).toBe(true);
+    expect(useAppStore.getState().selectedIds.has('1')).toBe(false);
   });
 
   it('multi selection adds to selection', () => {

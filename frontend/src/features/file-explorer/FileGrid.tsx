@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { FileCard } from './FileCard';
 
 export const FileGrid: React.FC = () => {
-  const { files, currentPath, selectedIds, toggleSelection } = useAppStore();
+  const { files, currentPath, selectedIds, toggleSelection, setCurrentPath } = useAppStore();
 
   const currentFiles = files.filter(f => f.path === currentPath);
 
@@ -16,6 +16,11 @@ export const FileGrid: React.FC = () => {
             file={file}
             selected={selectedIds.has(file.id)}
             onClick={(e) => toggleSelection(file.id, e.ctrlKey || e.metaKey, e.shiftKey)}
+            onDoubleClick={() => {
+              if (file.isDir && file.sourcePath) {
+                setCurrentPath(file.sourcePath);
+              }
+            }}
             animationDelay={`${(idx % 10) * 50}ms`}
           />
         ))}

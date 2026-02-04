@@ -4,9 +4,19 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { previewService } from '../../services/previewService';
 import { TokenSelector } from './TokenSelector';
 import { PreviewList } from './PreviewList';
+import { getTargetDir } from '../../utils/preview';
 
 export const PatternMixer: React.FC = () => {
-  const { mixerConfig, updateMixerConfig, selectedIds, setPreviewOps, setIsPreviewLoading } = useAppStore();
+  const {
+    mixerConfig,
+    updateMixerConfig,
+    selectedIds,
+    setPreviewOps,
+    setIsPreviewLoading,
+    files,
+    presets,
+    targetRoots
+  } = useAppStore();
 
   const debouncedConfig = useDebounce(mixerConfig, 500);
 
@@ -21,7 +31,29 @@ export const PatternMixer: React.FC = () => {
     const fetchPreview = async () => {
         setIsPreviewLoading(true);
         try {
-            const ops = await previewService.calculatePreview(Array.from(selectedIds), debouncedConfig);
+            const selectedFiles = files.filter(file => selectedIds.has(file.id));
+            const activeTargetId = mixerConfig.targetRootId || targetRoots[0]?.id;
+            const activePresetId = mixerConfig.presetId || presets[0]?.id;
+            const activeTarget = targetRoots.find(t => t.id === activeTargetId) || targetRoots[0];
+            const activePreset = presets.find(p => p.id === activePresetId) || presets[0];
+            if (!activeTarget || !activePreset) {
+              setPreviewOps([]);
+              return;
+            }
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            const rules = {
+              prefix: debouncedConfig.renamePattern === 'DATE'
+                ? `${dateStr}_`
+                : debouncedConfig.renamePattern === 'PREFIX'
+                  ? debouncedConfig.customPrefix || ''
+                  : '',
+              suffix: '',
+              useOriginal: debouncedConfig.renamePattern === 'RAW_NAME'
+            };
+
+            const targetPath = getTargetDir(activePreset, activeTarget);
+            const ops = await previewService.calculatePreview(selectedFiles, rules, targetPath);
             setPreviewOps(ops);
         } catch (error) {
             console.error(error);
@@ -31,7 +63,7 @@ export const PatternMixer: React.FC = () => {
     };
 
     fetchPreview();
-  }, [debouncedConfig, selectedIds, setPreviewOps, setIsPreviewLoading]);
+  }, [debouncedConfig, selectedIds, setPreviewOps, setIsPreviewLoading, files, mixerConfig, presets, targetRoots]);
 
   return (
     <div className="p-4 border rounded bg-white">

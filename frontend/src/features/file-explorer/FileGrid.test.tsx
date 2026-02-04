@@ -7,12 +7,13 @@ vi.mock('../../store/useAppStore');
 
 describe('FileGrid', () => {
     const mockFiles = [
-        { id: '1', name: 'f1', path: '/root', type: 'file', size: '1MB' },
-        { id: '2', name: 'f2', path: '/other', type: 'file', size: '2MB' },
-        { id: '3', name: 'f3', path: '/root', type: 'file', size: '3MB' },
+        { id: '1', name: 'f1', path: '/root', type: 'file', size: '1MB', mtime: 0 },
+        { id: '2', name: 'f2', path: '/other', type: 'file', size: '2MB', mtime: 0 },
+        { id: '3', name: 'f3', path: '/root', type: 'file', size: '3MB', mtime: 0 },
     ];
 
     const toggleSelection = vi.fn();
+    const setCurrentPath = vi.fn();
 
     beforeEach(() => {
         (useAppStore as any).mockReturnValue({
@@ -20,6 +21,7 @@ describe('FileGrid', () => {
             currentPath: '/root',
             selectedIds: new Set(['1']),
             toggleSelection,
+            setCurrentPath,
         });
     });
 

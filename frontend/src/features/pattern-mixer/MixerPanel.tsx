@@ -5,7 +5,7 @@ import { cn } from '../../utils/cn';
 export const MixerPanel: React.FC = () => {
   const { mixerConfig, updateMixerConfig, files, selectedIds } = useAppStore();
 
-  const selectedFiles = useMemo(() => files.filter(f => selectedIds.has(f.id)), [files, selectedIds]);
+  const selectedFiles = useMemo(() => files.filter(f => selectedIds.has(f.id) && !f.isDir), [files, selectedIds]);
 
   // Tokenization for first selected file
   const tokens = useMemo(() => {

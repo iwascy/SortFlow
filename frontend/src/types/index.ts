@@ -2,9 +2,11 @@ export interface FileItem {
   id: string;
   name: string;
   path: string;
+  sourcePath?: string;
   size: string;
   type: string;
   mtime: number;
+  isDir?: boolean;
   thumbnail?: string;
   metadata?: Record<string, any>;
   alt?: string;
@@ -24,6 +26,7 @@ export interface CategoryPreset {
   color: string;
   targetSubPath: string;
   defaultPrefix: string;
+  order?: number;
 }
 
 export interface MixerConfig {
