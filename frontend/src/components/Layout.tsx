@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MOCK_TASKS } from '../constants';
 import type { TaskStatus } from '../types';
+import { cn } from '../utils/cn';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
   const [showTasks, setShowTasks] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [tasks] = useState<TaskStatus[]>(MOCK_TASKS);
 
   const activeTasksCount = tasks.filter(t => t.status === 'active').length;
@@ -17,47 +19,94 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background-dark text-white antialiased font-display">
       {/* Sidebar */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border-dark bg-background-dark">
-        <div className="flex h-16 items-center px-6 gap-4">
-          <div className="size-8 flex items-center justify-center bg-gradient-to-br from-primary to-cyan-700 rounded-lg text-white">
+      <aside className={cn(
+        "hidden lg:flex shrink-0 flex-col border-r border-border-dark bg-background-dark transition-all duration-300 ease-in-out relative",
+        isCollapsed ? "w-20" : "w-64"
+      )}>
+        <div className={cn(
+          "flex h-16 items-center gap-4 transition-all duration-300",
+          isCollapsed ? "px-6 justify-center" : "px-6"
+        )}>
+          <div className="size-8 shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-cyan-700 rounded-lg text-white">
             <span className="material-symbols-outlined">sort</span>
           </div>
-          <h1 className="text-lg font-bold tracking-tight text-white">SortFlow <span className="text-xs font-medium opacity-60">v2.0</span></h1>
+          {!isCollapsed && (
+            <h1 className="text-lg font-bold tracking-tight text-white animate-in fade-in duration-300">
+              SortFlow <span className="text-xs font-medium opacity-60">v2.0</span>
+            </h1>
+          )}
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           <button
             onClick={() => onTabChange('dashboard')}
-            className={`w-full group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'dashboard' ? 'bg-[#234248] text-white' : 'text-slate-300 hover:bg-white/5'}`}
+            title={isCollapsed ? "Dashboard" : undefined}
+            className={cn(
+              "w-full group flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
+              isCollapsed ? "justify-center px-0" : "px-3",
+              activeTab === 'dashboard' ? 'bg-[#234248] text-white' : 'text-slate-300 hover:bg-white/5'
+            )}
           >
-            <span className={`material-symbols-outlined ${activeTab === 'dashboard' ? 'filled' : ''}`}>grid_view</span>
-            Dashboard
+            <span className={cn(
+              "material-symbols-outlined shrink-0",
+              activeTab === 'dashboard' ? 'filled' : ''
+            )}>grid_view</span>
+            {!isCollapsed && <span className="animate-in fade-in duration-300">Dashboard</span>}
           </button>
           <button
             onClick={() => onTabChange('config')}
-            className={`w-full group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'config' ? 'bg-[#234248] text-white' : 'text-slate-300 hover:bg-white/5'}`}
+            title={isCollapsed ? "Configuration" : undefined}
+            className={cn(
+              "w-full group flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
+              isCollapsed ? "justify-center px-0" : "px-3",
+              activeTab === 'config' ? 'bg-[#234248] text-white' : 'text-slate-300 hover:bg-white/5'
+            )}
           >
-            <span className={`material-symbols-outlined ${activeTab === 'config' ? 'filled' : ''}`}>settings</span>
-            Configuration
+            <span className={cn(
+              "material-symbols-outlined shrink-0",
+              activeTab === 'config' ? 'filled' : ''
+            )}>settings</span>
+            {!isCollapsed && <span className="animate-in fade-in duration-300">Configuration</span>}
           </button>
           <button
             onClick={() => onTabChange('history')}
-            className={`w-full group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'history' ? 'bg-[#234248] text-white' : 'text-slate-300 hover:bg-white/5'}`}
+            title={isCollapsed ? "History Log" : undefined}
+            className={cn(
+              "w-full group flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
+              isCollapsed ? "justify-center px-0" : "px-3",
+              activeTab === 'history' ? 'bg-[#234248] text-white' : 'text-slate-300 hover:bg-white/5'
+            )}
           >
-            <span className={`material-symbols-outlined ${activeTab === 'history' ? 'filled' : ''}`}>history</span>
-            History Log
+            <span className={cn(
+              "material-symbols-outlined shrink-0",
+              activeTab === 'history' ? 'filled' : ''
+            )}>history</span>
+            {!isCollapsed && <span className="animate-in fade-in duration-300">History Log</span>}
           </button>
         </nav>
 
-        <div className="p-4 border-t border-border-dark">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-medium text-text-secondary">Storage (Local)</span>
-            <span className="text-xs font-bold text-white">78%</span>
+        {/* Storage Info */}
+        {!isCollapsed && (
+          <div className="p-4 border-t border-border-dark animate-in fade-in duration-300">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium text-text-secondary">Storage (Local)</span>
+              <span className="text-xs font-bold text-white">78%</span>
+            </div>
+            <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
+              <div className="bg-primary h-1.5 rounded-full" style={{ width: '78%' }}></div>
+            </div>
           </div>
-          <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
-            <div className="bg-primary h-1.5 rounded-full" style={{ width: '78%' }}></div>
-          </div>
-        </div>
+        )}
+
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute -right-3 top-20 size-6 bg-[#234248] border border-border-dark rounded-full flex items-center justify-center text-white hover:bg-primary transition-colors z-30"
+        >
+          <span className="material-symbols-outlined text-[16px]">
+            {isCollapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
       </aside>
 
       {/* Main Area */}
