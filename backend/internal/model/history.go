@@ -19,6 +19,7 @@ type History struct {
 type HistoryFile struct {
 	ID           uint   `gorm:"primaryKey;autoIncrement"`
 	HistoryID    string `gorm:"index"`
+	Operation    string
 	OriginalPath string
 	OriginalName string
 	NewPath      string

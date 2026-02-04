@@ -132,6 +132,22 @@ func (s *HistoryService) UndoHistory(id string) error {
 		if file.Status != "success" {
 			continue
 		}
+		operation := file.Operation
+		if operation == "" {
+			operation = history.Action
+		}
+
+		switch operation {
+		case "copy":
+			if err := os.Remove(file.NewPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+				undoErrors = append(undoErrors, err)
+			}
+			continue
+		case "move":
+		default:
+			operation = "move"
+		}
+
 		if err := os.MkdirAll(filepath.Dir(file.OriginalPath), 0o755); err != nil {
 			undoErrors = append(undoErrors, err)
 			continue

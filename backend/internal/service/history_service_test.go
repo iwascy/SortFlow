@@ -177,3 +177,69 @@ func TestHistoryServiceDeleteBefore(t *testing.T) {
 		t.Fatalf("expected 1 remaining history, got %d", remaining)
 	}
 }
+
+func TestHistoryServiceUndoHistoryCopy(t *testing.T) {
+	db := newTestDB(t)
+	service := NewHistoryService(db)
+
+	tempDir := t.TempDir()
+	originalPath := filepath.Join(tempDir, "original.txt")
+	if err := os.WriteFile(originalPath, []byte("data"), 0o644); err != nil {
+		t.Fatalf("failed to create original file: %v", err)
+	}
+	newPath := filepath.Join(tempDir, "copy", "original.txt")
+	if err := os.MkdirAll(filepath.Dir(newPath), 0o755); err != nil {
+		t.Fatalf("failed to create copy dir: %v", err)
+	}
+	if err := os.WriteFile(newPath, []byte("data"), 0o644); err != nil {
+		t.Fatalf("failed to create copied file: %v", err)
+	}
+
+	entry := model.History{
+		ID:            uuid.NewString(),
+		Action:        "copy",
+		FileCount:     1,
+		PresetID:      "preset-1",
+		TargetRootID:  "root-1",
+		TargetPath:    filepath.Dir(newPath),
+		Status:        "completed",
+		CanUndo:       true,
+		UndoExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	files := []model.HistoryFile{
+		{
+			Operation:    "copy",
+			OriginalPath: originalPath,
+			OriginalName: "original.txt",
+			NewPath:      newPath,
+			NewName:      "original.txt",
+			Status:       "success",
+		},
+	}
+
+	if err := service.CreateHistory(entry, files); err != nil {
+		t.Fatalf("failed to create history: %v", err)
+	}
+
+	if err := service.UndoHistory(entry.ID); err != nil {
+		t.Fatalf("failed to undo history: %v", err)
+	}
+
+	if _, err := os.Stat(originalPath); err != nil {
+		t.Fatalf("expected original file to remain: %v", err)
+	}
+	if _, err := os.Stat(newPath); !os.IsNotExist(err) {
+		t.Fatalf("expected copied file removed, got: %v", err)
+	}
+
+	var updated model.History
+	if err := db.First(&updated, "id = ?", entry.ID).Error; err != nil {
+		t.Fatalf("failed to load updated history: %v", err)
+	}
+	if updated.Status != "undone" {
+		t.Fatalf("expected status undone, got %s", updated.Status)
+	}
+	if updated.CanUndo {
+		t.Fatalf("expected can_undo to be false")
+	}
+}

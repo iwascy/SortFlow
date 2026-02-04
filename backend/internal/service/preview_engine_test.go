@@ -150,3 +150,34 @@ func TestGeneratePreviewAutoRenameSkipsExistingSuffixes(t *testing.T) {
 		t.Fatalf("expected name image_2.png, got %s", results[0].NewName)
 	}
 }
+
+func TestGeneratePreviewBatchAndDiskConflictAvoidsDuplicates(t *testing.T) {
+	engine := NewPreviewEngine()
+	targetDir := t.TempDir()
+
+	existing := []string{
+		filepath.Join(targetDir, "image.png"),
+		filepath.Join(targetDir, "image_1.png"),
+	}
+	for _, path := range existing {
+		if err := os.WriteFile(path, []byte("data"), 0o644); err != nil {
+			t.Fatalf("failed to create file: %v", err)
+		}
+	}
+
+	files := []dto.FileInfo{
+		{ID: "1", Name: "image.png"},
+		{ID: "2", Name: "image.png"},
+	}
+
+	results := engine.GeneratePreview(files, dto.RenameRules{}, targetDir)
+	if len(results) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(results))
+	}
+	if results[0].NewName == results[1].NewName {
+		t.Fatalf("expected unique names, got %s", results[0].NewName)
+	}
+	if results[0].Status != "auto_renamed" || results[1].Status != "auto_renamed" {
+		t.Fatalf("expected auto_renamed for both results")
+	}
+}

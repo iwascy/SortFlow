@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"sortflow/internal/api/response"
 	"sortflow/internal/config"
@@ -19,9 +18,9 @@ type OrganizeHandler struct {
 	cfg    *config.Config
 }
 
-func NewOrganizeHandler(db *gorm.DB, cfg *config.Config) *OrganizeHandler {
+func NewOrganizeHandler(engine *service.ExecutionEngine, cfg *config.Config) *OrganizeHandler {
 	return &OrganizeHandler{
-		engine: service.NewExecutionEngine(db, cfg.AllowedRootPaths),
+		engine: engine,
 		cfg:    cfg,
 	}
 }

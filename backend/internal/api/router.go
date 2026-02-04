@@ -6,13 +6,15 @@ import (
 
 	"sortflow/internal/api/handler"
 	"sortflow/internal/config"
+	"sortflow/internal/service"
 )
 
 func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	fileHandler := handler.NewFileHandler(cfg)
 	previewHandler := handler.NewPreviewHandler(cfg)
-	organizeHandler := handler.NewOrganizeHandler(db, cfg)
-	taskHandler := handler.NewTaskHandler(db)
+	executionEngine := service.NewExecutionEngine(db, cfg.AllowedRootPaths)
+	organizeHandler := handler.NewOrganizeHandler(executionEngine, cfg)
+	taskHandler := handler.NewTaskHandler(db, executionEngine)
 	systemHandler := handler.NewSystemHandler(db, cfg)
 	historyHandler := handler.NewHistoryHandler(db)
 
@@ -26,6 +28,7 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 
 	r.GET("/tasks/:id", taskHandler.GetTask)
 	r.GET("/ws/tasks/:id", taskHandler.StreamTask)
+	r.POST("/tasks/:id/cancel", taskHandler.CancelTask)
 
 	r.GET("/system/config", systemHandler.GetConfig)
 	r.POST("/system/watchers", systemHandler.AddWatcher)

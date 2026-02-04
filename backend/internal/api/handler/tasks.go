@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -10,14 +11,16 @@ import (
 
 	"sortflow/internal/api/response"
 	"sortflow/internal/model"
+	"sortflow/internal/service"
 )
 
 type TaskHandler struct {
-	db *gorm.DB
+	db     *gorm.DB
+	engine *service.ExecutionEngine
 }
 
-func NewTaskHandler(db *gorm.DB) *TaskHandler {
-	return &TaskHandler{db: db}
+func NewTaskHandler(db *gorm.DB, engine *service.ExecutionEngine) *TaskHandler {
+	return &TaskHandler{db: db, engine: engine}
 }
 
 func (h *TaskHandler) GetTask(c *gin.Context) {
@@ -64,8 +67,27 @@ func (h *TaskHandler) StreamTask(c *gin.Context) {
 			return
 		}
 
-		if task.Status == "completed" || task.Status == "failed" {
+		if task.Status == "completed" || task.Status == "failed" || task.Status == "cancelled" {
 			return
 		}
 	}
+}
+
+func (h *TaskHandler) CancelTask(c *gin.Context) {
+	taskID := c.Param("id")
+
+	if err := h.engine.CancelTask(taskID); err != nil {
+		if errors.Is(err, service.ErrTaskNotFound) {
+			response.AbortWithError(c, response.NotFound("task not found"))
+			return
+		}
+		if errors.Is(err, service.ErrTaskNotRunning) {
+			response.AbortWithError(c, response.BadRequest(err))
+			return
+		}
+		response.AbortWithError(c, response.Internal(err))
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

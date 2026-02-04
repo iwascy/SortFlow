@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -23,6 +24,8 @@ type ExecutionEngine struct {
 	db           *gorm.DB
 	history      *HistoryService
 	allowedRoots []string
+	cancelMu     sync.Mutex
+	cancels      map[string]context.CancelFunc
 }
 
 func NewExecutionEngine(db *gorm.DB, allowedRoots []string) *ExecutionEngine {
@@ -30,8 +33,14 @@ func NewExecutionEngine(db *gorm.DB, allowedRoots []string) *ExecutionEngine {
 		db:           db,
 		history:      NewHistoryService(db),
 		allowedRoots: allowedRoots,
+		cancels:      make(map[string]context.CancelFunc),
 	}
 }
+
+var (
+	ErrTaskNotFound   = errors.New("task not found")
+	ErrTaskNotRunning = errors.New("task not running")
+)
 
 func (e *ExecutionEngine) CreateTask() (*model.Task, error) {
 	task := &model.Task{
@@ -43,6 +52,32 @@ func (e *ExecutionEngine) CreateTask() (*model.Task, error) {
 		return nil, err
 	}
 	return task, nil
+}
+
+func (e *ExecutionEngine) CancelTask(taskID string) error {
+	if e.db == nil {
+		return errors.New("database is required")
+	}
+
+	var task model.Task
+	if err := e.db.First(&task, "id = ?", taskID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrTaskNotFound
+		}
+		return err
+	}
+	if task.Status != "running" {
+		return ErrTaskNotRunning
+	}
+
+	e.cancelMu.Lock()
+	cancel, ok := e.cancels[taskID]
+	e.cancelMu.Unlock()
+	if !ok {
+		return ErrTaskNotRunning
+	}
+	cancel()
+	return nil
 }
 
 func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) error {
@@ -58,11 +93,16 @@ func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) err
 		}
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	e.storeCancel(taskID, cancel)
+
 	go func() {
+		defer e.removeCancel(taskID)
+
 		actions := request.Actions
 		total := len(actions)
 		if total == 0 {
-			e.completeTask(taskID, "completed")
+			e.finalizeTask(taskID, "completed", 1)
 			return
 		}
 
@@ -80,16 +120,31 @@ func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) err
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				for action := range actionChan {
-					err := e.processFile(action)
-					resultChan <- actionResult{action: action, err: err}
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case action, ok := <-actionChan:
+						if !ok {
+							return
+						}
+						err := e.processFile(action)
+						resultChan <- actionResult{action: action, err: err}
+					}
 				}
 			}()
 		}
 
 		go func() {
 			for _, action := range actions {
-				actionChan <- action
+				select {
+				case <-ctx.Done():
+					close(actionChan)
+					wg.Wait()
+					close(resultChan)
+					return
+				case actionChan <- action:
+				}
 			}
 			close(actionChan)
 			wg.Wait()
@@ -112,24 +167,37 @@ func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) err
 		}
 
 		status := "completed"
-		if hasError {
+		if ctx.Err() != nil {
+			status = "cancelled"
+		} else if hasError {
 			status = "failed"
+		}
+
+		fileCount := len(historyFiles)
+		canUndo := fileCount > 0
+		undoExpiresAt := time.Time{}
+		if canUndo {
+			undoExpiresAt = time.Now().Add(7 * 24 * time.Hour)
 		}
 
 		historyEntry := model.History{
 			ID:            uuid.NewString(),
 			Action:        request.Action,
-			FileCount:     total,
+			FileCount:     fileCount,
 			PresetID:      request.PresetID,
 			TargetRootID:  request.TargetRootID,
 			TargetPath:    request.TargetPath,
 			Status:        status,
-			CanUndo:       true,
-			UndoExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+			CanUndo:       canUndo,
+			UndoExpiresAt: undoExpiresAt,
 		}
 		_ = e.history.CreateHistory(historyEntry, historyFiles)
 
-		e.completeTask(taskID, status)
+		finalProgress := 1.0
+		if status == "cancelled" && total > 0 {
+			finalProgress = float64(atomic.LoadInt64(&processed)) / float64(total)
+		}
+		e.finalizeTask(taskID, status, finalProgress)
 	}()
 	return nil
 }
@@ -145,6 +213,7 @@ func buildHistoryFile(result actionResult) model.HistoryFile {
 		status = "failed"
 	}
 	return model.HistoryFile{
+		Operation:    result.action.Operation,
 		OriginalPath: result.action.SourcePath,
 		OriginalName: filepath.Base(result.action.SourcePath),
 		NewPath:      result.action.TargetPath,
@@ -159,6 +228,9 @@ func (e *ExecutionEngine) processFile(action dto.OrganizeAction) error {
 	}
 	switch action.Operation {
 	case "move":
+		if err := os.MkdirAll(filepath.Dir(action.TargetPath), 0o755); err != nil {
+			return err
+		}
 		return os.Rename(action.SourcePath, action.TargetPath)
 	case "copy":
 		return copyFile(action.SourcePath, action.TargetPath)
@@ -196,10 +268,10 @@ func (e *ExecutionEngine) updateProgress(taskID string, progress float64) {
 	})
 }
 
-func (e *ExecutionEngine) completeTask(taskID, status string) {
+func (e *ExecutionEngine) finalizeTask(taskID, status string, progress float64) {
 	e.db.Model(&model.Task{}).Where("id = ?", taskID).Updates(map[string]any{
 		"status":   status,
-		"progress": 1,
+		"progress": progress,
 	})
 }
 
@@ -214,4 +286,16 @@ func (e *ExecutionEngine) appendLog(taskID, message string) {
 		task.Logs = task.Logs + "\n" + message
 	}
 	e.db.Model(&model.Task{}).Where("id = ?", taskID).Update("logs", task.Logs)
+}
+
+func (e *ExecutionEngine) storeCancel(taskID string, cancel context.CancelFunc) {
+	e.cancelMu.Lock()
+	defer e.cancelMu.Unlock()
+	e.cancels[taskID] = cancel
+}
+
+func (e *ExecutionEngine) removeCancel(taskID string) {
+	e.cancelMu.Lock()
+	defer e.cancelMu.Unlock()
+	delete(e.cancels, taskID)
 }
