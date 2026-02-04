@@ -1,0 +1,7 @@
+id,type,priority,description,location,status
+ISS-001,feature,P1,History log page and functionality is missing.,App.tsx / features/history,open
+ISS-002,feature,P1,System configuration page (sources/targets/presets) is missing.,App.tsx / features/config,open
+ISS-003,cleanup,P3,PatternMixer.tsx appears unused and should be removed or merged.,src/features/pattern-mixer/PatternMixer.tsx,open
+ISS-004,architecture,P2,Preview logic is implemented client-side in TransactionDesk instead of calling /api/v1/preview.,src/features/execution/TransactionDesk.tsx,open
+ISS-005,feature,P2,Custom Prefix input is missing from MixerPanel (exists in unused PatternMixer).,src/features/pattern-mixer/MixerPanel.tsx,open
+ISS-006,architecture,P2,Presets and Target Roots are hardcoded constants instead of fetched from API.,src/constants.ts,open
