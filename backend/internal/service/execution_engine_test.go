@@ -16,8 +16,8 @@ import (
 )
 
 func TestExecutionEngineProcessFile(t *testing.T) {
-	engine := NewExecutionEngine(nil)
 	tempDir := t.TempDir()
+	engine := NewExecutionEngine(nil, []string{tempDir})
 
 	moveSrc := filepath.Join(tempDir, "move.txt")
 	moveDst := filepath.Join(tempDir, "moved", "move.txt")
@@ -72,14 +72,14 @@ func TestExecutionEngineProcessFile(t *testing.T) {
 
 func TestExecutionEngineExecuteUpdatesProgressAndLogs(t *testing.T) {
 	db := newTestDB(t)
-	engine := NewExecutionEngine(db)
+	tempDir := t.TempDir()
+	engine := NewExecutionEngine(db, []string{tempDir})
 
 	task, err := engine.CreateTask()
 	if err != nil {
 		t.Fatalf("failed to create task: %v", err)
 	}
 
-	tempDir := t.TempDir()
 	src := filepath.Join(tempDir, "source.txt")
 	if err := os.WriteFile(src, []byte("data"), 0o644); err != nil {
 		t.Fatalf("failed to create source file: %v", err)
@@ -105,7 +105,9 @@ func TestExecutionEngineExecuteUpdatesProgressAndLogs(t *testing.T) {
 		},
 	}
 
-	engine.Execute(task.ID, request)
+	if err := engine.Execute(task.ID, request); err != nil {
+		t.Fatalf("failed to execute task: %v", err)
+	}
 
 	updated := waitForTaskCompletion(t, db, task.ID)
 	if updated.Status != "failed" {

@@ -16,17 +16,20 @@ import (
 
 	"sortflow/internal/dto"
 	"sortflow/internal/model"
+	"sortflow/internal/pkg/security"
 )
 
 type ExecutionEngine struct {
-	db      *gorm.DB
-	history *HistoryService
+	db           *gorm.DB
+	history      *HistoryService
+	allowedRoots []string
 }
 
-func NewExecutionEngine(db *gorm.DB) *ExecutionEngine {
+func NewExecutionEngine(db *gorm.DB, allowedRoots []string) *ExecutionEngine {
 	return &ExecutionEngine{
-		db:      db,
-		history: NewHistoryService(db),
+		db:           db,
+		history:      NewHistoryService(db),
+		allowedRoots: allowedRoots,
 	}
 }
 
@@ -42,7 +45,19 @@ func (e *ExecutionEngine) CreateTask() (*model.Task, error) {
 	return task, nil
 }
 
-func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) {
+func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) error {
+	if e.db == nil {
+		return errors.New("database is required")
+	}
+	if !security.ValidatePath(request.TargetPath, e.allowedRoots) {
+		return errors.New("path not allowed")
+	}
+	for _, action := range request.Actions {
+		if !security.ValidatePath(action.SourcePath, e.allowedRoots) || !security.ValidatePath(action.TargetPath, e.allowedRoots) {
+			return errors.New("path not allowed")
+		}
+	}
+
 	go func() {
 		actions := request.Actions
 		total := len(actions)
@@ -116,6 +131,7 @@ func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) {
 
 		e.completeTask(taskID, status)
 	}()
+	return nil
 }
 
 type actionResult struct {
@@ -138,6 +154,9 @@ func buildHistoryFile(result actionResult) model.HistoryFile {
 }
 
 func (e *ExecutionEngine) processFile(action dto.OrganizeAction) error {
+	if !security.ValidatePath(action.SourcePath, e.allowedRoots) || !security.ValidatePath(action.TargetPath, e.allowedRoots) {
+		return errors.New("path not allowed")
+	}
 	switch action.Operation {
 	case "move":
 		return os.Rename(action.SourcePath, action.TargetPath)

@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
+	"sortflow/internal/api/response"
 	"sortflow/internal/config"
 	"sortflow/internal/dto"
 	"sortflow/internal/pkg/security"
@@ -24,18 +26,18 @@ func NewFileHandler(cfg *config.Config) *FileHandler {
 func (h *FileHandler) ListFiles(c *gin.Context) {
 	path := c.Query("path")
 	if path == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "path is required"})
+		response.AbortWithError(c, response.BadRequest(errors.New("path is required")))
 		return
 	}
 	if !security.ValidatePath(path, h.cfg.AllowedRootPaths) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "path not allowed"})
+		response.AbortWithError(c, response.Forbidden("path not allowed"))
 		return
 	}
 
 	recursive, _ := strconv.ParseBool(c.DefaultQuery("recursive", "false"))
 	files, err := service.ScanDirectory(path, recursive)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.Internal(err))
 		return
 	}
 
@@ -45,17 +47,17 @@ func (h *FileHandler) ListFiles(c *gin.Context) {
 func (h *FileHandler) Thumbnail(c *gin.Context) {
 	path := c.Query("path")
 	if path == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "path is required"})
+		response.AbortWithError(c, response.BadRequest(errors.New("path is required")))
 		return
 	}
 	if !security.ValidatePath(path, h.cfg.AllowedRootPaths) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "path not allowed"})
+		response.AbortWithError(c, response.Forbidden("path not allowed"))
 		return
 	}
 
 	data, err := thumbnail.GenerateThumbnail(path, h.cfg.ThumbnailSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.Internal(err))
 		return
 	}
 
@@ -65,17 +67,17 @@ func (h *FileHandler) Thumbnail(c *gin.Context) {
 func (h *FileHandler) Metadata(c *gin.Context) {
 	path := c.Query("path")
 	if path == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "path is required"})
+		response.AbortWithError(c, response.BadRequest(errors.New("path is required")))
 		return
 	}
 	if !security.ValidatePath(path, h.cfg.AllowedRootPaths) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "path not allowed"})
+		response.AbortWithError(c, response.Forbidden("path not allowed"))
 		return
 	}
 
 	attributes, err := service.ExtractMetadata(path)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.Internal(err))
 		return
 	}
 

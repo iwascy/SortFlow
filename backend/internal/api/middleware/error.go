@@ -1,6 +1,13 @@
 package middleware
 
-import "github.com/gin-gonic/gin"
+import (
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"sortflow/internal/api/response"
+)
 
 func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -10,11 +17,16 @@ func ErrorHandler() gin.HandlerFunc {
 			return
 		}
 
-		status := c.Writer.Status()
-		if status < 400 {
-			status = 500
+		lastErr := c.Errors.Last().Err
+		var apiErr *response.APIError
+		if errors.As(lastErr, &apiErr) {
+			c.JSON(apiErr.Status, response.BuildResponse(apiErr))
+			return
 		}
 
-		c.JSON(status, gin.H{"error": c.Errors.String()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+			Code:    "internal_error",
+			Message: "internal server error",
+		})
 	}
 }
