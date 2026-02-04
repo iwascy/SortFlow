@@ -10,8 +10,8 @@ import (
 
 func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	fileHandler := handler.NewFileHandler(cfg)
-	previewHandler := handler.NewPreviewHandler()
-	organizeHandler := handler.NewOrganizeHandler(db)
+	previewHandler := handler.NewPreviewHandler(cfg)
+	organizeHandler := handler.NewOrganizeHandler(db, cfg)
 	taskHandler := handler.NewTaskHandler(db)
 	systemHandler := handler.NewSystemHandler(db, cfg)
 	historyHandler := handler.NewHistoryHandler(db)

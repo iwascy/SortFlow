@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 
+	"sortflow/internal/api/response"
 	"sortflow/internal/model"
 )
 
@@ -25,10 +26,10 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 	var task model.Task
 	if err := h.db.First(&task, "id = ?", taskID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+			response.AbortWithError(c, response.NotFound("task not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.Internal(err))
 		return
 	}
 

@@ -9,13 +9,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"sortflow/internal/config"
 	"sortflow/internal/dto"
 )
 
 func TestPreviewHandlerGeneratePreview(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	handler := NewPreviewHandler()
+	tempDir := t.TempDir()
+	handler := NewPreviewHandler(&config.Config{
+		AllowedRootPaths: []string{tempDir},
+	})
 	router.POST("/preview", handler.GeneratePreview)
 
 	request := dto.PreviewRequest{
@@ -24,7 +28,7 @@ func TestPreviewHandlerGeneratePreview(t *testing.T) {
 			{ID: "2", Name: "photo.jpg"},
 		},
 		Rules:      dto.RenameRules{},
-		TargetPath: t.TempDir(),
+		TargetPath: tempDir,
 	}
 
 	body, err := json.Marshal(request)

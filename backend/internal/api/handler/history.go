@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"sortflow/internal/api/response"
 	"sortflow/internal/service"
 )
 
@@ -24,23 +26,23 @@ func (h *HistoryHandler) ListHistories(c *gin.Context) {
 	pageSize := parseIntQuery(c, "pageSize", 20)
 	action := c.Query("action")
 
-	response, err := h.service.ListHistories(page, pageSize, action)
+	result, err := h.service.ListHistories(page, pageSize, action)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.Internal(err))
 		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *HistoryHandler) GetHistory(c *gin.Context) {
 	history, err := h.service.GetHistory(c.Param("id"))
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "history not found"})
+			response.AbortWithError(c, response.NotFound("history not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.Internal(err))
 		return
 	}
 
@@ -49,7 +51,7 @@ func (h *HistoryHandler) GetHistory(c *gin.Context) {
 
 func (h *HistoryHandler) UndoHistory(c *gin.Context) {
 	if err := h.service.UndoHistory(c.Param("id")); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.BadRequest(err))
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -58,18 +60,18 @@ func (h *HistoryHandler) UndoHistory(c *gin.Context) {
 func (h *HistoryHandler) DeleteHistory(c *gin.Context) {
 	before := c.Query("before")
 	if before == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "before is required"})
+		response.AbortWithError(c, response.BadRequest(errors.New("before is required")))
 		return
 	}
 	cutoff, err := time.Parse(time.RFC3339, before)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid before timestamp"})
+		response.AbortWithError(c, response.BadRequest(errors.New("invalid before timestamp")))
 		return
 	}
 
 	count, err := h.service.DeleteBefore(cutoff)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.AbortWithError(c, response.Internal(err))
 		return
 	}
 
