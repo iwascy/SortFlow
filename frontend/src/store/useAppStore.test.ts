@@ -3,9 +3,9 @@ import { useAppStore } from './useAppStore';
 import type { FileItem } from '../types';
 
 const mockFiles: FileItem[] = [
-  { id: '1', name: 'f1', path: '/root', type: 'file', size: '1MB', mtime: 0 },
-  { id: '2', name: 'f2', path: '/root', type: 'file', size: '2MB', mtime: 0 },
-  { id: '3', name: 'f3', path: '/root', type: 'file', size: '3MB', mtime: 0 },
+  { id: '1', name: 'f1', path: '/root', type: 'file', size: '1MB', ctime: 0, mtime: 0 },
+  { id: '2', name: 'f2', path: '/root', type: 'file', size: '2MB', ctime: 0, mtime: 0 },
+  { id: '3', name: 'f3', path: '/root', type: 'file', size: '3MB', ctime: 0, mtime: 0 },
 ];
 
 describe('useAppStore Selection', () => {

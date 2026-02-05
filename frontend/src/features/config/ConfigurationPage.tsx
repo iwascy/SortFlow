@@ -23,13 +23,6 @@ export const ConfigurationPage: React.FC = () => {
   const targetPickerRef = useRef<HTMLInputElement | null>(null);
   const presetPickerRef = useRef<HTMLInputElement | null>(null);
 
-  const prepareDirectoryInput = useCallback((input: HTMLInputElement | null) => {
-    if (!input) return;
-    input.setAttribute('webkitdirectory', '');
-    input.setAttribute('directory', '');
-    input.multiple = true;
-  }, []);
-
   const resolveDirectoryPath = useCallback((files: FileList | null): string | null => {
     if (!files || files.length === 0) return null;
     const firstFile = files[0] as File & { path?: string; webkitRelativePath?: string };
@@ -77,11 +70,15 @@ export const ConfigurationPage: React.FC = () => {
     void loadConfig();
   }, [loadConfig]);
 
-  useEffect(() => {
-    prepareDirectoryInput(watcherPickerRef.current);
-    prepareDirectoryInput(targetPickerRef.current);
-    prepareDirectoryInput(presetPickerRef.current);
-  }, [prepareDirectoryInput]);
+  const openDirectoryPicker = useCallback((ref: React.RefObject<HTMLInputElement>) => {
+    const input = ref.current;
+    if (!input) return;
+    input.setAttribute('webkitdirectory', '');
+    input.setAttribute('directory', '');
+    input.setAttribute('mozdirectory', '');
+    input.multiple = true;
+    input.click();
+  }, []);
 
   const handleAddWatcher = async () => {
     if (!watcherPath.trim()) return;
@@ -218,7 +215,7 @@ export const ConfigurationPage: React.FC = () => {
               className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs font-mono text-white"
             />
             <button
-              onClick={() => watcherPickerRef.current?.click()}
+              onClick={() => openDirectoryPicker(watcherPickerRef)}
               className="px-4 py-3 text-xs font-black uppercase tracking-widest border border-border-dark rounded-xl hover:border-primary/40"
             >
               选择目录
@@ -272,7 +269,7 @@ export const ConfigurationPage: React.FC = () => {
                 className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs font-mono text-white"
               />
               <button
-                onClick={() => targetPickerRef.current?.click()}
+                onClick={() => openDirectoryPicker(targetPickerRef)}
                 className="px-4 py-3 text-xs font-black uppercase tracking-widest border border-border-dark rounded-xl hover:border-primary/40"
               >
                 选择
@@ -335,7 +332,7 @@ export const ConfigurationPage: React.FC = () => {
                 className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
               />
               <button
-                onClick={() => presetPickerRef.current?.click()}
+                onClick={() => openDirectoryPicker(presetPickerRef)}
                 className="px-4 py-3 text-xs font-black uppercase tracking-widest border border-border-dark rounded-xl hover:border-primary/40"
               >
                 选择

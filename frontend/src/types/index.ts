@@ -5,6 +5,7 @@ export interface FileItem {
   sourcePath?: string;
   size: string;
   type: string;
+  ctime: number;
   mtime: number;
   isDir?: boolean;
   thumbnail?: string;

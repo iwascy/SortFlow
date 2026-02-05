@@ -11,6 +11,7 @@ interface BackendFileInfo {
   name: string;
   path: string;
   size: number;
+  createdTime: string;
   modTime: string;
   isDir: boolean;
 }
@@ -53,6 +54,7 @@ const normalizeFile = (file: BackendFileInfo): FileItem => {
     sourcePath: file.path,
     size: file.isDir ? '-' : formatBytes(file.size),
     type,
+    ctime: Date.parse(file.createdTime) || Date.parse(file.modTime) || Date.now(),
     mtime: Date.parse(file.modTime) || Date.now(),
     isDir: file.isDir,
     thumbnail: isImage ? getThumbnailUrl(file.path) : undefined,

@@ -7,6 +7,7 @@ type FileInfo struct {
 	Name    string    `json:"name"`
 	Path    string    `json:"path"`
 	Size    int64     `json:"size"`
+	Created time.Time `json:"createdTime"`
 	ModTime time.Time `json:"modTime"`
 	IsDir   bool      `json:"isDir"`
 }

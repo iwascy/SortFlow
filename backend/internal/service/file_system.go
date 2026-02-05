@@ -18,14 +18,15 @@ func ScanDirectory(path string, recursive bool) ([]dto.FileInfo, error) {
 			if err != nil {
 				return err
 			}
-			entries = append(entries, dto.FileInfo{
-				ID:      current,
-				Name:    info.Name(),
-				Path:    current,
-				Size:    info.Size(),
-				ModTime: info.ModTime(),
-				IsDir:   info.IsDir(),
-			})
+		entries = append(entries, dto.FileInfo{
+			ID:      current,
+			Name:    info.Name(),
+			Path:    current,
+			Size:    info.Size(),
+			Created: getCreateTime(info),
+			ModTime: info.ModTime(),
+			IsDir:   info.IsDir(),
+		})
 			return nil
 		})
 		if err != nil {
@@ -49,6 +50,7 @@ func ScanDirectory(path string, recursive bool) ([]dto.FileInfo, error) {
 			Name:    info.Name(),
 			Path:    entryPath,
 			Size:    info.Size(),
+			Created: getCreateTime(info),
 			ModTime: info.ModTime(),
 			IsDir:   info.IsDir(),
 		})
@@ -68,6 +70,7 @@ func GetFileInfo(path string) (dto.FileInfo, error) {
 		Name:    info.Name(),
 		Path:    path,
 		Size:    info.Size(),
+		Created: getCreateTime(info),
 		ModTime: info.ModTime(),
 		IsDir:   info.IsDir(),
 	}, nil

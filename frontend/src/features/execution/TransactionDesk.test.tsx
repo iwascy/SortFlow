@@ -8,7 +8,7 @@ vi.mock('../../store/useAppStore');
 describe('TransactionDesk', () => {
     const updateMixerConfig = vi.fn();
     const setPreviewOps = vi.fn();
-    const mockFiles = [{ id: '1', name: 'f1.jpg', path: '/root', sourcePath: '/root/f1.jpg', type: 'JPG', size: '1MB', mtime: 0 }];
+    const mockFiles = [{ id: '1', name: 'f1.jpg', path: '/root', sourcePath: '/root/f1.jpg', type: 'JPG', size: '1MB', ctime: 0, mtime: 0 }];
     const mockPresets = [
         { id: 'scenery', name: 'Scenery', icon: 'landscape', color: 'indigo', targetSubPath: 'Travel/Scenery', defaultPrefix: 'TR_' },
         { id: 'vacation', name: 'Vacation', icon: 'beach_access', color: 'primary', targetSubPath: 'Vacation', defaultPrefix: 'VAC_' },
