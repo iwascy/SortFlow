@@ -18,13 +18,15 @@ export const ConfigurationPage: React.FC = () => {
     icon: '',
   });
   const [coverResult, setCoverResult] = useState<string | null>(null);
+  const [keywordInput, setKeywordInput] = useState('');
 
   const loadConfig = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await configService.getConfig();
-      setConfig({ sourceWatchers: response.watchers || [], theme: 'dark' });
+      const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
+      setConfig({ sourceWatchers: response.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
       const sortedPresets = (response.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setPresets(sortedPresets);
       setTargetRoots(response.targets || []);
@@ -139,6 +141,23 @@ export const ConfigurationPage: React.FC = () => {
     }
   };
 
+
+
+  const handleAddKeyword = () => {
+    const value = keywordInput.trim();
+    if (!value) return;
+    const next = Array.from(new Set([...(config.customKeywords || []), value]));
+    setConfig({ customKeywords: next });
+    localStorage.setItem('sortflow.customKeywords', JSON.stringify(next));
+    setKeywordInput('');
+  };
+
+  const handleRemoveKeyword = (keyword: string) => {
+    const next = (config.customKeywords || []).filter(item => item !== keyword);
+    setConfig({ customKeywords: next });
+    localStorage.setItem('sortflow.customKeywords', JSON.stringify(next));
+  };
+
   const handleRemovePreset = async (id: string) => {
     setLoading(true);
     setError(null);
@@ -187,6 +206,40 @@ export const ConfigurationPage: React.FC = () => {
             />
             <span>仅显示媒体文件（图片/视频），隐藏非媒体文件</span>
           </label>
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-sm font-black uppercase tracking-widest text-text-secondary">Pattern Mixer Keywords</h3>
+          <p className="text-xs text-text-secondary">添加自定义关键字供 Pattern Mixer 使用，例如：家庭、公园。</p>
+          <div className="flex flex-wrap gap-2">
+            {(config.customKeywords || []).map(keyword => (
+              <button
+                key={keyword}
+                onClick={() => handleRemoveKeyword(keyword)}
+                className="px-3 py-1.5 rounded-xl text-xs bg-surface-dark/60 border border-border-dark hover:border-red-400/60"
+                title="点击移除"
+              >
+                {keyword}
+              </button>
+            ))}
+            {(config.customKeywords || []).length === 0 && (
+              <span className="text-xs text-text-secondary">暂无关键字</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <input
+              value={keywordInput}
+              onChange={(event) => setKeywordInput(event.target.value)}
+              placeholder="输入关键字"
+              className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
+            />
+            <button
+              onClick={handleAddKeyword}
+              className="px-5 py-3 text-xs font-black uppercase tracking-widest bg-primary text-slate-900 rounded-xl shadow-lg"
+            >
+              Add Keyword
+            </button>
+          </div>
         </section>
 
         <section className="space-y-4">
