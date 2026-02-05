@@ -30,6 +30,12 @@ export interface CategoryPreset {
   order?: number;
 }
 
+export interface Keyword {
+  id: string;
+  name: string;
+  order?: number;
+}
+
 export interface MixerConfig {
   presetId: string | null;
   targetRootId: string | null;
@@ -44,6 +50,8 @@ export interface MixerConfig {
   useDate: boolean;
   useOriginal: boolean;
   selectedTokens: string[];
+  selectedKeywords: string[];
+  selectedOrder: string[];
 }
 
 export type PreviewStatus = 'ready' | 'auto_renamed' | 'error';

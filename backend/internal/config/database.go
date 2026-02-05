@@ -17,6 +17,7 @@ func InitDB(dbPath string) (*gorm.DB, error) {
 		&model.SourceWatcher{},
 		&model.TargetRoot{},
 		&model.Preset{},
+		&model.Keyword{},
 		&model.History{},
 		&model.HistoryFile{},
 		&model.Task{},

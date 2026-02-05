@@ -3,6 +3,7 @@ import type {
   FileItem,
   TargetRoot,
   CategoryPreset,
+  Keyword,
   MixerConfig,
   PreviewOperation,
   ExecutionState,
@@ -14,6 +15,7 @@ interface AppState {
   config: AppConfig;
   targetRoots: TargetRoot[];
   presets: CategoryPreset[];
+  keywords: Keyword[];
 
   // File Explorer
   files: FileItem[];
@@ -38,6 +40,7 @@ interface AppState {
   setConfig: (config: Partial<AppConfig>) => void;
   setTargetRoots: (roots: TargetRoot[]) => void;
   setPresets: (presets: CategoryPreset[]) => void;
+  setKeywords: (keywords: Keyword[]) => void;
 
   setFiles: (files: FileItem[]) => void;
   setIsLoadingFiles: (loading: boolean) => void;
@@ -69,6 +72,8 @@ const DEFAULT_MIXER_CONFIG: MixerConfig = {
   useDate: true,
   useOriginal: false,
   selectedTokens: [],
+  selectedKeywords: [],
+  selectedOrder: [],
 };
 
 const DEFAULT_EXECUTION_STATE: ExecutionState = {
@@ -85,6 +90,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   config: { sourceWatchers: [], theme: 'light', hideNonMedia: false },
   targetRoots: [],
   presets: [],
+  keywords: [],
 
   files: [],
   currentPath: '',
@@ -104,6 +110,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   setConfig: (config) => set((state) => ({ config: { ...state.config, ...config } })),
   setTargetRoots: (roots) => set({ targetRoots: roots }),
   setPresets: (presets) => set({ presets }),
+  setKeywords: (keywords) =>
+    set((state) => {
+      const allowed = new Set(keywords.map(k => k.name));
+      const nextSelectedKeywords = state.mixerConfig.selectedKeywords.filter(k => allowed.has(k));
+      const nextSelectedOrder = state.mixerConfig.selectedOrder.filter(part =>
+        state.mixerConfig.selectedTokens.includes(part) || nextSelectedKeywords.includes(part)
+      );
+      return {
+        keywords,
+        mixerConfig: {
+          ...state.mixerConfig,
+          selectedKeywords: nextSelectedKeywords,
+          selectedOrder: nextSelectedOrder,
+        },
+      };
+    }),
 
   setFiles: (files) => set({ files }),
   setIsLoadingFiles: (loading) => set({ isLoadingFiles: loading }),

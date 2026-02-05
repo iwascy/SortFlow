@@ -44,10 +44,26 @@ export const buildPreviewOps = (
 
       if (mixerConfig.useOriginal) {
         nameParts.push(getBaseName(file.name));
-      } else if (mixerConfig.selectedTokens && mixerConfig.selectedTokens.length > 0) {
-        nameParts.push(...mixerConfig.selectedTokens);
       } else {
-        nameParts.push(activePreset.name.toUpperCase());
+        const selectedParts = (
+          mixerConfig.selectedOrder && mixerConfig.selectedOrder.length > 0
+            ? mixerConfig.selectedOrder
+            : [
+                ...(mixerConfig.selectedTokens || []),
+                ...(mixerConfig.selectedKeywords || []),
+              ]
+        ).filter(Boolean);
+        if (selectedParts.length > 0) {
+          const seen = new Set<string>();
+          const uniqueParts = selectedParts.filter(part => {
+            if (seen.has(part)) return false;
+            seen.add(part);
+            return true;
+          });
+          nameParts.push(...uniqueParts);
+        } else {
+          nameParts.push(activePreset.name.toUpperCase());
+        }
       }
 
       const baseName = nameParts.join('_').replace(/_{2,}/g, '_');

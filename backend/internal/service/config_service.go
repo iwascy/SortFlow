@@ -110,3 +110,33 @@ func (s *ConfigService) UpdateTarget(id string, request dto.TargetRequest) (*mod
 func (s *ConfigService) DeleteTarget(id string) error {
 	return s.db.Delete(&model.TargetRoot{}, "id = ?", id).Error
 }
+
+func (s *ConfigService) CreateKeyword(request dto.KeywordRequest) (*model.Keyword, error) {
+	keyword := &model.Keyword{
+		ID:    uuid.NewString(),
+		Name:  request.Name,
+		Order: request.Order,
+	}
+	if err := s.db.Create(keyword).Error; err != nil {
+		return nil, err
+	}
+	return keyword, nil
+}
+
+func (s *ConfigService) UpdateKeyword(id string, request dto.KeywordRequest) (*model.Keyword, error) {
+	var keyword model.Keyword
+	if err := s.db.First(&keyword, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	keyword.Name = request.Name
+	keyword.Order = request.Order
+
+	if err := s.db.Save(&keyword).Error; err != nil {
+		return nil, err
+	}
+	return &keyword, nil
+}
+
+func (s *ConfigService) DeleteKeyword(id string) error {
+	return s.db.Delete(&model.Keyword{}, "id = ?", id).Error
+}

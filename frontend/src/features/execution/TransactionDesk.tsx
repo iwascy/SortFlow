@@ -121,9 +121,13 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
           <span className="text-[9px] font-black text-text-secondary uppercase tracking-widest">Queue Preview</span>
           <div className="space-y-3">
             {previewOps.slice(0, 3).map((op, i) => (
-              <div key={op.id} className="flex items-center gap-4 text-[10px] text-text-secondary/60 animate-in fade-in slide-in-from-right" style={{ animationDelay: `${i * 100}ms` }}>
+              <div key={op.id} className="flex items-center gap-4 text-[10px] animate-in fade-in slide-in-from-right" style={{ animationDelay: `${i * 100}ms` }}>
                 <span className="size-2 rounded-full bg-primary/40 shrink-0" />
-                <span className="truncate flex-1">{op.newName}</span>
+                <div className="min-w-0 flex-1 flex items-center gap-2">
+                  <span className="truncate text-text-secondary/70">{op.originalName}</span>
+                  <span className="shrink-0 text-primary/60">→</span>
+                  <span className="truncate text-white">{op.newName}</span>
+                </div>
               </div>
             ))}
             {previewOps.length > 3 && <p className="text-[9px] text-text-secondary/40 pl-6 italic">+ {previewOps.length - 3} more items</p>}

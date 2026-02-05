@@ -187,7 +187,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
             <button className="flex items-center justify-center size-10 rounded-full hover:bg-surface-dark transition-colors text-text-secondary">
               <span className="material-symbols-outlined">notifications</span>
             </button>
-            <div className="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-primary" style={{ backgroundImage: 'linear-gradient(135deg, #11b4d4 0%, #0f172a 100%)' }}></div>
           </div>
         </header>
 
