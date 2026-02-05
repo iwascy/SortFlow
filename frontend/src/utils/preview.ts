@@ -32,16 +32,12 @@ export const buildPreviewOps = (
   activePreset: CategoryPreset,
   activeTarget: TargetRoot,
 ): PreviewOperation[] => {
-  const dateStr = new Date().toISOString().split('T')[0];
   const targetDir = joinPath(activeTarget.path, activePreset.targetSubPath);
 
   return selectedFiles
     .filter(file => !file.isDir)
     .map((file, idx, list) => {
       const nameParts: string[] = [];
-      if (mixerConfig.usePrefix) nameParts.push(activePreset.defaultPrefix || 'PRE_');
-      if (mixerConfig.useDate) nameParts.push(dateStr);
-
       if (mixerConfig.useOriginal) {
         nameParts.push(getBaseName(file.name));
       } else if (mixerConfig.selectedTokens && mixerConfig.selectedTokens.length > 0) {

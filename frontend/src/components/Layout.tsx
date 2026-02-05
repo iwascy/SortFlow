@@ -85,18 +85,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
           </button>
         </nav>
 
-        {/* Storage Info */}
-        {!isCollapsed && (
-          <div className="p-4 border-t border-border-dark animate-in fade-in duration-300">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-medium text-text-secondary">Storage (Local)</span>
-              <span className="text-xs font-bold text-white">78%</span>
-            </div>
-            <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
-              <div className="bg-primary h-1.5 rounded-full" style={{ width: '78%' }}></div>
-            </div>
-          </div>
-        )}
+
 
         {/* Collapse Toggle Button */}
         <button
