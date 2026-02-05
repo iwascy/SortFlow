@@ -1,11 +1,14 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { isMediaFileName } from '../../utils/media';
 import { FileCard } from './FileCard';
 
 export const FileGrid: React.FC = () => {
-  const { files, currentPath, selectedIds, toggleSelection, setCurrentPath } = useAppStore();
+  const { files, currentPath, selectedIds, toggleSelection, setCurrentPath, config } = useAppStore();
 
-  const currentFiles = files.filter(f => f.path === currentPath);
+  const currentFiles = files
+    .filter(f => f.path === currentPath)
+    .filter(f => !config.hideNonMedia || f.isDir || isMediaFileName(f.name));
 
   return (
     <div className="flex-1 overflow-y-auto p-10 pb-40 animate-in fade-in duration-1000 delay-200 fill-mode-both">

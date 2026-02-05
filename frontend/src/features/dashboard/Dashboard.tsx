@@ -33,6 +33,20 @@ export const Dashboard: React.FC = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const wsTaskIdRef = useRef<string | null>(null);
 
+  const normalizePath = useCallback((value: string) => {
+    if (!value) return '';
+    const normalized = value.replace(/\\/g, '/');
+    return normalized.endsWith('/') && normalized.length > 1 ? normalized.slice(0, -1) : normalized;
+  }, []);
+
+  const isWithinWatcher = useCallback((path: string, watchers: string[]) => {
+    const normalizedPath = normalizePath(path);
+    return watchers.some((watcher) => {
+      const normalizedWatcher = normalizePath(watcher);
+      return normalizedPath === normalizedWatcher || normalizedPath.startsWith(`${normalizedWatcher}/`);
+    });
+  }, [normalizePath]);
+
   const loadFiles = useCallback(async (path: string, fallbackToConstants: boolean) => {
     setIsLoadingFiles(true);
     try {
@@ -66,8 +80,11 @@ export const Dashboard: React.FC = () => {
         setPresets(sortedPresets.length ? sortedPresets : PRESETS);
         setTargetRoots((config.targets || []).length ? config.targets : TARGET_ROOTS);
         if (config.watchers?.length) {
-          if (!currentPath || !config.watchers.includes(currentPath)) {
-            setCurrentPath(config.watchers[0]);
+          const nextPath = currentPath && isWithinWatcher(currentPath, config.watchers)
+            ? currentPath
+            : config.watchers[0];
+          if (nextPath && nextPath !== currentPath) {
+            setCurrentPath(nextPath);
           }
         }
       } catch (error) {

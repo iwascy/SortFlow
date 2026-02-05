@@ -74,6 +74,7 @@ export interface ExecutionState {
 export interface AppConfig {
   sourceWatchers: string[];
   theme: 'light' | 'dark';
+  hideNonMedia: boolean;
 }
 
 export interface TaskStatus {
