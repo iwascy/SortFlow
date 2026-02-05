@@ -42,9 +42,19 @@ export const configService = {
       body: JSON.stringify(payload),
     }),
 
+  deletePreset: (id: string) =>
+    request<void>(`/system/presets/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+
   createTarget: (payload: CreateTargetRequest) =>
     request<TargetRoot>('/system/targets', {
       method: 'POST',
       body: JSON.stringify(payload),
+    }),
+
+  deleteTarget: (id: string) =>
+    request<void>(`/system/targets/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
     }),
 };

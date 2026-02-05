@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { configService } from '../../services/configService';
 
@@ -11,43 +11,12 @@ export const ConfigurationPage: React.FC = () => {
     name: '',
     targetSubPath: '',
     defaultPrefix: '',
-    icon: '',
-    color: '',
   });
   const [targetForm, setTargetForm] = useState({
     name: '',
     path: '',
     icon: '',
   });
-  const watcherPickerRef = useRef<HTMLInputElement | null>(null);
-  const targetPickerRef = useRef<HTMLInputElement | null>(null);
-  const presetPickerRef = useRef<HTMLInputElement | null>(null);
-
-  const resolveDirectoryPath = useCallback((files: FileList | null): string | null => {
-    if (!files || files.length === 0) return null;
-    const firstFile = files[0] as File & { path?: string; webkitRelativePath?: string };
-    const fullPath = typeof firstFile.path === 'string' ? firstFile.path : '';
-    const relativePath = firstFile.webkitRelativePath || '';
-    if (!fullPath) return null;
-    if (relativePath) {
-      const normalizedRelative = relativePath.replace(/\\/g, '/');
-      const rootName = normalizedRelative.split('/')[0] || '';
-      const base = fullPath.slice(0, Math.max(0, fullPath.length - normalizedRelative.length));
-      const candidate = `${base}${rootName}`;
-      return candidate.replace(/\/+$/, '');
-    }
-    return fullPath.replace(/[/\\][^/\\]*$/, '');
-  }, []);
-
-  const handleDirectoryPick = useCallback((files: FileList | null, onResolved: (path: string) => void) => {
-    const resolved = resolveDirectoryPath(files);
-    if (!resolved) {
-      setError('无法读取目录绝对路径，请确认在桌面环境运行。');
-      return;
-    }
-    setError(null);
-    onResolved(resolved);
-  }, [resolveDirectoryPath]);
 
   const loadConfig = useCallback(async () => {
     setLoading(true);
@@ -69,16 +38,6 @@ export const ConfigurationPage: React.FC = () => {
   useEffect(() => {
     void loadConfig();
   }, [loadConfig]);
-
-  const openDirectoryPicker = useCallback((ref: React.RefObject<HTMLInputElement>) => {
-    const input = ref.current;
-    if (!input) return;
-    input.setAttribute('webkitdirectory', '');
-    input.setAttribute('directory', '');
-    input.setAttribute('mozdirectory', '');
-    input.multiple = true;
-    input.click();
-  }, []);
 
   const handleAddWatcher = async () => {
     if (!watcherPath.trim()) return;
@@ -119,10 +78,8 @@ export const ConfigurationPage: React.FC = () => {
         name: presetForm.name.trim(),
         targetSubPath: presetForm.targetSubPath.trim(),
         defaultPrefix: presetForm.defaultPrefix.trim(),
-        icon: presetForm.icon.trim(),
-        color: presetForm.color.trim(),
       });
-      setPresetForm({ name: '', targetSubPath: '', defaultPrefix: '', icon: '', color: '' });
+      setPresetForm({ name: '', targetSubPath: '', defaultPrefix: '' });
       await loadConfig();
     } catch (err) {
       console.error(err);
@@ -147,6 +104,34 @@ export const ConfigurationPage: React.FC = () => {
     } catch (err) {
       console.error(err);
       setError('Failed to create target.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveTarget = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await configService.deleteTarget(id);
+      await loadConfig();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to remove target.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemovePreset = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await configService.deletePreset(id);
+      await loadConfig();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to remove preset.');
     } finally {
       setLoading(false);
     }
@@ -210,31 +195,16 @@ export const ConfigurationPage: React.FC = () => {
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <input
               value={watcherPath}
-              readOnly
-              placeholder="选择目录"
+              onChange={(event) => setWatcherPath(event.target.value)}
+              placeholder="输入目录路径"
               className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs font-mono text-white"
             />
-            <button
-              onClick={() => openDirectoryPicker(watcherPickerRef)}
-              className="px-4 py-3 text-xs font-black uppercase tracking-widest border border-border-dark rounded-xl hover:border-primary/40"
-            >
-              选择目录
-            </button>
             <button
               onClick={handleAddWatcher}
               className="px-5 py-3 text-xs font-black uppercase tracking-widest bg-primary text-slate-900 rounded-xl shadow-lg"
             >
               Add
             </button>
-            <input
-              ref={watcherPickerRef}
-              type="file"
-              className="hidden"
-              onChange={(event) => {
-                handleDirectoryPick(event.target.files, setWatcherPath);
-                event.currentTarget.value = '';
-              }}
-            />
           </div>
         </section>
 
@@ -248,6 +218,12 @@ export const ConfigurationPage: React.FC = () => {
                   <div className="text-xs font-black">{target.name}</div>
                   <div className="text-[10px] font-mono text-text-secondary">{target.path}</div>
                 </div>
+                <button
+                  onClick={() => handleRemoveTarget(target.id)}
+                  className="text-xs font-black uppercase tracking-widest text-red-300 hover:text-red-200"
+                >
+                  Remove
+                </button>
               </div>
             ))}
             {targetRoots.length === 0 && (
@@ -261,20 +237,12 @@ export const ConfigurationPage: React.FC = () => {
               placeholder="Name"
               className="bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
             />
-            <div className="md:col-span-2 flex gap-2">
-              <input
-                value={targetForm.path}
-                readOnly
-                placeholder="选择目录"
-                className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs font-mono text-white"
-              />
-              <button
-                onClick={() => openDirectoryPicker(targetPickerRef)}
-                className="px-4 py-3 text-xs font-black uppercase tracking-widest border border-border-dark rounded-xl hover:border-primary/40"
-              >
-                选择
-              </button>
-            </div>
+            <input
+              value={targetForm.path}
+              onChange={e => setTargetForm(prev => ({ ...prev, path: e.target.value }))}
+              placeholder="输入目录路径"
+              className="md:col-span-2 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs font-mono text-white"
+            />
             <input
               value={targetForm.icon}
               onChange={e => setTargetForm(prev => ({ ...prev, icon: e.target.value }))}
@@ -288,15 +256,6 @@ export const ConfigurationPage: React.FC = () => {
           >
             Create Target
           </button>
-          <input
-            ref={targetPickerRef}
-            type="file"
-            className="hidden"
-            onChange={(event) => {
-              handleDirectoryPick(event.target.files, (path) => setTargetForm(prev => ({ ...prev, path })));
-              event.currentTarget.value = '';
-            }}
-          />
         </section>
 
         <section className="space-y-4">
@@ -311,6 +270,12 @@ export const ConfigurationPage: React.FC = () => {
                     {preset.targetSubPath} · {preset.defaultPrefix}
                   </div>
                 </div>
+                <button
+                  onClick={() => handleRemovePreset(preset.id)}
+                  className="text-xs font-black uppercase tracking-widest text-red-300 hover:text-red-200"
+                >
+                  Remove
+                </button>
               </div>
             ))}
             {presets.length === 0 && (
@@ -324,38 +289,16 @@ export const ConfigurationPage: React.FC = () => {
               placeholder="Preset Name"
               className="bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
             />
-            <div className="md:col-span-2 flex gap-2">
-              <input
-                value={presetForm.targetSubPath}
-                readOnly
-                placeholder="选择目录"
-                className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
-              />
-              <button
-                onClick={() => openDirectoryPicker(presetPickerRef)}
-                className="px-4 py-3 text-xs font-black uppercase tracking-widest border border-border-dark rounded-xl hover:border-primary/40"
-              >
-                选择
-              </button>
-            </div>
+            <input
+              value={presetForm.targetSubPath}
+              onChange={e => setPresetForm(prev => ({ ...prev, targetSubPath: e.target.value }))}
+              placeholder="输入子路径"
+              className="md:col-span-2 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
+            />
             <input
               value={presetForm.defaultPrefix}
               onChange={e => setPresetForm(prev => ({ ...prev, defaultPrefix: e.target.value }))}
               placeholder="Default Prefix"
-              className="bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <input
-              value={presetForm.icon}
-              onChange={e => setPresetForm(prev => ({ ...prev, icon: e.target.value }))}
-              placeholder="Icon"
-              className="bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
-            />
-            <input
-              value={presetForm.color}
-              onChange={e => setPresetForm(prev => ({ ...prev, color: e.target.value }))}
-              placeholder="Color"
               className="bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
             />
           </div>
@@ -365,15 +308,6 @@ export const ConfigurationPage: React.FC = () => {
           >
             Create Preset
           </button>
-          <input
-            ref={presetPickerRef}
-            type="file"
-            className="hidden"
-            onChange={(event) => {
-              handleDirectoryPick(event.target.files, (path) => setPresetForm(prev => ({ ...prev, targetSubPath: path })));
-              event.currentTarget.value = '';
-            }}
-          />
         </section>
       </div>
     </div>
