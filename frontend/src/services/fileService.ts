@@ -17,6 +17,9 @@ interface BackendFileInfo {
 }
 
 const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif', 'heic', 'avif']);
+const VIDEO_EXTENSIONS = new Set([
+  'mp4', 'mov', 'm4v', 'mkv', 'avi', 'webm', 'wmv', 'flv', 'mpg', 'mpeg', '3gp', '3g2', 'mts', 'm2ts', 'vob', 'hevc', 'h265', 'h264'
+]);
 
 const formatBytes = (bytes: number): string => {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
@@ -46,7 +49,7 @@ const normalizeFile = (file: BackendFileInfo): FileItem => {
   const ext = getFileExtension(file.name);
   const type = file.isDir ? 'dir' : (ext ? ext.toUpperCase() : 'FILE');
   const parentPath = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) || '/' : file.path;
-  const isImage = !file.isDir && IMAGE_EXTENSIONS.has(ext);
+  const isMedia = !file.isDir && (IMAGE_EXTENSIONS.has(ext) || VIDEO_EXTENSIONS.has(ext));
   return {
     id: file.id || file.path,
     name: file.name,
@@ -57,7 +60,7 @@ const normalizeFile = (file: BackendFileInfo): FileItem => {
     ctime: Date.parse(file.createdTime) || Date.parse(file.modTime) || Date.now(),
     mtime: Date.parse(file.modTime) || Date.now(),
     isDir: file.isDir,
-    thumbnail: isImage ? getThumbnailUrl(file.path) : undefined,
+    thumbnail: isMedia ? getThumbnailUrl(file.path) : undefined,
   };
 };
 

@@ -17,6 +17,7 @@ export const ConfigurationPage: React.FC = () => {
     path: '',
     icon: '',
   });
+  const [coverResult, setCoverResult] = useState<string | null>(null);
 
   const loadConfig = useCallback(async () => {
     setLoading(true);
@@ -123,6 +124,21 @@ export const ConfigurationPage: React.FC = () => {
     }
   };
 
+  const handleGenerateVideoCovers = async () => {
+    setLoading(true);
+    setError(null);
+    setCoverResult(null);
+    try {
+      const result = await configService.generateVideoCovers();
+      setCoverResult(`扫描 ${result.total} 个视频，成功生成 ${result.generated} 个封面，失败 ${result.failed} 个。`);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to generate video covers.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRemovePreset = async (id: string) => {
     setLoading(true);
     setError(null);
@@ -171,6 +187,18 @@ export const ConfigurationPage: React.FC = () => {
             />
             <span>仅显示媒体文件（图片/视频），隐藏非媒体文件</span>
           </label>
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-sm font-black uppercase tracking-widest text-text-secondary">Video Covers</h3>
+          <p className="text-xs text-text-secondary">扫描所有 Source Watchers 下的目录，为视频生成封面缓存。</p>
+          <button
+            onClick={handleGenerateVideoCovers}
+            className="px-5 py-3 text-xs font-black uppercase tracking-widest bg-primary text-slate-900 rounded-xl shadow-lg"
+          >
+            Generate Video Covers
+          </button>
+          {coverResult && <div className="text-xs text-emerald-300">{coverResult}</div>}
         </section>
 
         <section className="space-y-4">
