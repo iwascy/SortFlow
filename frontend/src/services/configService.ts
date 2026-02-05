@@ -22,6 +22,12 @@ export interface CreateTargetRequest {
   icon?: string;
 }
 
+export interface GenerateVideoCoversResponse {
+  total: number;
+  generated: number;
+  failed: number;
+}
+
 export const configService = {
   getConfig: () => request<SystemConfigResponse>('/system/config'),
 
@@ -56,5 +62,10 @@ export const configService = {
   deleteTarget: (id: string) =>
     request<void>(`/system/targets/${encodeURIComponent(id)}`, {
       method: 'DELETE',
+    }),
+
+  generateVideoCovers: () =>
+    request<GenerateVideoCoversResponse>('/system/video-covers/generate', {
+      method: 'POST',
     }),
 };

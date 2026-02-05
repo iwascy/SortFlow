@@ -40,6 +40,7 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	r.POST("/system/targets", systemHandler.CreateTarget)
 	r.PUT("/system/targets/:id", systemHandler.UpdateTarget)
 	r.DELETE("/system/targets/:id", systemHandler.DeleteTarget)
+	r.POST("/system/video-covers/generate", systemHandler.GenerateVideoCovers)
 
 	r.GET("/history", historyHandler.ListHistories)
 	r.GET("/history/:id", historyHandler.GetHistory)
