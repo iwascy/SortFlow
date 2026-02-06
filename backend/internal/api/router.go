@@ -20,6 +20,7 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 
 	r.GET("/files/list", fileHandler.ListFiles)
 	r.GET("/files/thumbnail", fileHandler.Thumbnail)
+	r.GET("/files/content", fileHandler.Content)
 	r.GET("/files/metadata", fileHandler.Metadata)
 
 	r.POST("/preview", previewHandler.GeneratePreview)
