@@ -38,8 +38,16 @@ const getExtension = (name: string): string => {
   return name.slice(idx + 1).toLowerCase();
 };
 
-export const isMediaFileName = (name: string): boolean => {
+export const isImageFileName = (name: string): boolean => {
   const ext = getExtension(name);
   if (!ext) return false;
-  return IMAGE_EXTENSIONS.has(ext) || VIDEO_EXTENSIONS.has(ext);
+  return IMAGE_EXTENSIONS.has(ext);
 };
+
+export const isVideoFileName = (name: string): boolean => {
+  const ext = getExtension(name);
+  if (!ext) return false;
+  return VIDEO_EXTENSIONS.has(ext);
+};
+
+export const isMediaFileName = (name: string): boolean => isImageFileName(name) || isVideoFileName(name);

@@ -34,4 +34,9 @@ describe('fileService', () => {
     // We expect it to contain the endpoint. The base URL might vary but the suffix is constant.
     expect(url).toContain('/files/thumbnail?path=');
   });
+
+  it('getFileContentUrl returns correct url', () => {
+    const url = fileService.getFileContentUrl('/some/path/file.jpg');
+    expect(url).toContain('/files/content?path=');
+  });
 });
