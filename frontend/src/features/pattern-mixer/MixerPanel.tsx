@@ -49,6 +49,17 @@ export const MixerPanel: React.FC = () => {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-border-dark bg-surface-dark/40 px-5 py-4 space-y-2">
+        <div className="text-[9px] uppercase tracking-widest text-text-secondary font-black">Temporary Keyword</div>
+        <input
+          value={mixerConfig.tempKeyword}
+          onChange={(event) => updateMixerConfig({ tempKeyword: event.target.value })}
+          placeholder="输入临时关键字，自动加到文件名"
+          className="w-full rounded-xl border border-border-dark bg-black/30 px-4 py-3 text-[11px] text-white placeholder:text-text-secondary/60 focus:border-primary focus:outline-none"
+        />
+        <p className="text-[9px] text-text-secondary">发起迁移任务后会自动清空。</p>
+      </div>
+
       {!mixerConfig.useOriginal && (
         <div className="pt-6 border-t border-border-dark/50 animate-in fade-in slide-in-from-top duration-500 space-y-4">
           {keywordTokens.length > 0 && (

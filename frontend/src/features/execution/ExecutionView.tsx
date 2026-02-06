@@ -7,6 +7,7 @@ export const ExecutionView: React.FC = () => {
   const {
     executionState,
     setExecutionState,
+    updateMixerConfig,
     previewOps,
     selectedIds,
     files,
@@ -56,6 +57,7 @@ export const ExecutionView: React.FC = () => {
           targetPath
         });
         setExecutionState({ taskId });
+        updateMixerConfig({ tempKeyword: '' });
     } catch (e) {
         setExecutionState({ status: 'ERROR', error: 'Failed to start execution' });
     }

@@ -65,6 +65,7 @@ const DEFAULT_MIXER_CONFIG: MixerConfig = {
   tokens: [],
   selectedTokenIndices: [],
   customPrefix: '',
+  tempKeyword: '',
   usePrefix: true,
   useDate: true,
   useOriginal: false,
