@@ -45,6 +45,7 @@ export interface MixerConfig {
   tokens: string[];
   selectedTokenIndices: number[];
   customPrefix: string;
+  tempKeyword: string;
   // Added fields to match demo state
   usePrefix: boolean;
   useDate: boolean;

@@ -38,6 +38,7 @@ export const buildPreviewOps = (
     .filter(file => !file.isDir)
     .map((file, idx, list) => {
       const nameParts: string[] = [];
+      const tempKeyword = mixerConfig.tempKeyword?.trim();
       if (mixerConfig.useOriginal) {
         nameParts.push(getBaseName(file.name));
       } else {
@@ -60,6 +61,9 @@ export const buildPreviewOps = (
         } else {
           nameParts.push(activePreset.name.toUpperCase());
         }
+      }
+      if (tempKeyword) {
+        nameParts.push(tempKeyword);
       }
 
       const baseName = nameParts.join('_').replace(/_{2,}/g, '_');
