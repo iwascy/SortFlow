@@ -43,6 +43,7 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	r.POST("/system/keywords", systemHandler.CreateKeyword)
 	r.PUT("/system/keywords/:id", systemHandler.UpdateKeyword)
 	r.DELETE("/system/keywords/:id", systemHandler.DeleteKeyword)
+	r.POST("/system/video-covers/generate", systemHandler.GenerateVideoCovers)
 
 	r.GET("/history", historyHandler.ListHistories)
 	r.GET("/history/:id", historyHandler.GetHistory)

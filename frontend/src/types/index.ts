@@ -84,6 +84,7 @@ export interface AppConfig {
   sourceWatchers: string[];
   theme: 'light' | 'dark';
   hideNonMedia: boolean;
+  customKeywords: string[];
 }
 
 export interface TaskStatus {

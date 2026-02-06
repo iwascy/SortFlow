@@ -25,7 +25,7 @@ describe('api service', () => {
     const result = await request('/test');
     expect(result).toEqual(mockData);
 
-    const [url, options] = mockFetch.mock.lastCall;
+    const [url, options] = mockFetch.mock.lastCall ?? [];
     expect(url).toContain('/test');
     // api.ts does not explicitly set method: GET if not provided, relies on fetch default
     expect(options.method).toBeUndefined();
@@ -53,7 +53,7 @@ describe('api service', () => {
 
     await request('/post', { method: 'POST', body: JSON.stringify({ a: 1 }) });
 
-    const [url, options] = mockFetch.mock.lastCall;
+    const [url, options] = mockFetch.mock.lastCall ?? [];
     expect(url).toContain('/post');
     expect(options.method).toBe('POST');
 

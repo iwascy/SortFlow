@@ -87,7 +87,7 @@ const DEFAULT_EXECUTION_STATE: ExecutionState = {
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial State
-  config: { sourceWatchers: [], theme: 'light', hideNonMedia: false },
+  config: { sourceWatchers: [], theme: 'light', hideNonMedia: false, customKeywords: [] },
   targetRoots: [],
   presets: [],
   keywords: [],

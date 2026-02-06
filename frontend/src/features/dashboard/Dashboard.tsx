@@ -76,7 +76,8 @@ export const Dashboard: React.FC = () => {
     const loadConfig = async () => {
       try {
         const config = await configService.getConfig();
-        setConfig({ sourceWatchers: config.watchers || [], theme: 'dark' });
+        const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
+        setConfig({ sourceWatchers: config.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         const sortedPresets = (config.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setPresets(sortedPresets.length ? sortedPresets : PRESETS);
         setTargetRoots((config.targets || []).length ? config.targets : TARGET_ROOTS);
@@ -91,7 +92,8 @@ export const Dashboard: React.FC = () => {
         }
       } catch (error) {
         console.error(error);
-        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'dark' });
+        const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
+        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         setPresets(PRESETS);
         setTargetRoots(TARGET_ROOTS);
         setKeywords([]);

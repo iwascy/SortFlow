@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,6 +14,7 @@ import (
 	"sortflow/internal/dto"
 	"sortflow/internal/model"
 	"sortflow/internal/pkg/security"
+	"sortflow/internal/pkg/thumbnail"
 	"sortflow/internal/service"
 )
 
@@ -266,4 +268,45 @@ func (h *SystemHandler) DeleteKeyword(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *SystemHandler) GenerateVideoCovers(c *gin.Context) {
+	type generateVideoCoversResponse struct {
+		Total     int `json:"total"`
+		Generated int `json:"generated"`
+		Failed    int `json:"failed"`
+	}
+
+	var watchers []model.SourceWatcher
+	h.db.Find(&watchers)
+
+	total := 0
+	generated := 0
+	failed := 0
+
+	for _, watcher := range watchers {
+		_ = filepath.WalkDir(watcher.Path, func(current string, d os.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				failed++
+				return nil
+			}
+			if d.IsDir() || !thumbnail.IsVideoFile(current) {
+				return nil
+			}
+
+			total++
+			if _, err := thumbnail.GenerateThumbnail(current, h.cfg.ThumbnailSize); err != nil {
+				failed++
+				return nil
+			}
+			generated++
+			return nil
+		})
+	}
+
+	c.JSON(http.StatusOK, generateVideoCoversResponse{
+		Total:     total,
+		Generated: generated,
+		Failed:    failed,
+	})
 }

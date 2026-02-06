@@ -28,6 +28,12 @@ export interface CreateKeywordRequest {
   order?: number;
 }
 
+export interface GenerateVideoCoversResponse {
+  total: number;
+  generated: number;
+  failed: number;
+}
+
 export const configService = {
   getConfig: () => request<SystemConfigResponse>('/system/config'),
 
@@ -46,6 +52,11 @@ export const configService = {
     request<CategoryPreset>('/system/presets', {
       method: 'POST',
       body: JSON.stringify(payload),
+    }),
+
+  deletePreset: (id: string) =>
+    request<void>(`/system/presets/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
     }),
 
   createTarget: (payload: CreateTargetRequest) =>
@@ -69,5 +80,15 @@ export const configService = {
   deleteKeyword: (id: string) =>
     request<void>(`/system/keywords/${encodeURIComponent(id)}`, {
       method: 'DELETE',
+    }),
+
+  deleteTarget: (id: string) =>
+    request<void>(`/system/targets/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+
+  generateVideoCovers: () =>
+    request<GenerateVideoCoversResponse>('/system/video-covers/generate', {
+      method: 'POST',
     }),
 };
