@@ -64,6 +64,20 @@ func (h *FileHandler) Thumbnail(c *gin.Context) {
 	c.Data(http.StatusOK, "image/webp", data)
 }
 
+func (h *FileHandler) Content(c *gin.Context) {
+	path := c.Query("path")
+	if path == "" {
+		response.AbortWithError(c, response.BadRequest(errors.New("path is required")))
+		return
+	}
+	if !security.ValidatePath(path, h.cfg.AllowedRootPaths) {
+		response.AbortWithError(c, response.Forbidden("path not allowed"))
+		return
+	}
+
+	c.File(path)
+}
+
 func (h *FileHandler) Metadata(c *gin.Context) {
 	path := c.Query("path")
 	if path == "" {

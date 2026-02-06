@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { configService } from '../../services/configService';
 
 export const ConfigurationPage: React.FC = () => {
-  const { config, presets, targetRoots, setConfig, setPresets, setTargetRoots } = useAppStore();
+  const { config, presets, targetRoots, keywords, setConfig, setPresets, setTargetRoots, setKeywords } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [watcherPath, setWatcherPath] = useState('');
@@ -17,17 +17,22 @@ export const ConfigurationPage: React.FC = () => {
     path: '',
     icon: '',
   });
+  const [keywordForm, setKeywordForm] = useState({ name: '' });
+  const [keywordEdits, setKeywordEdits] = useState<Record<string, string>>({});
   const [coverResult, setCoverResult] = useState<string | null>(null);
+  const [keywordInput, setKeywordInput] = useState('');
 
   const loadConfig = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await configService.getConfig();
-      setConfig({ sourceWatchers: response.watchers || [], theme: 'dark' });
+      const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
+      setConfig({ sourceWatchers: response.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
       const sortedPresets = (response.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setPresets(sortedPresets);
       setTargetRoots(response.targets || []);
+      setKeywords(response.keywords || []);
     } catch (err) {
       console.error(err);
       setError('Failed to load configuration.');
@@ -40,6 +45,13 @@ export const ConfigurationPage: React.FC = () => {
     void loadConfig();
   }, [loadConfig]);
 
+  useEffect(() => {
+    const nextEdits: Record<string, string> = {};
+    keywords.forEach(keyword => {
+      nextEdits[keyword.id] = keyword.name;
+    });
+    setKeywordEdits(nextEdits);
+  }, [keywords]);
   const handleAddWatcher = async () => {
     if (!watcherPath.trim()) return;
     setLoading(true);
@@ -124,6 +136,38 @@ export const ConfigurationPage: React.FC = () => {
     }
   };
 
+  const handleCreateKeyword = async () => {
+    if (!keywordForm.name.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await configService.createKeyword({ name: keywordForm.name.trim() });
+      setKeywordForm({ name: '' });
+      await loadConfig();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to create keyword.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateKeyword = async (id: string) => {
+    const name = (keywordEdits[id] || '').trim();
+    if (!name) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await configService.updateKeyword(id, { name });
+      await loadConfig();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to update keyword.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGenerateVideoCovers = async () => {
     setLoading(true);
     setError(null);
@@ -137,6 +181,35 @@ export const ConfigurationPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteKeyword = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await configService.deleteKeyword(id);
+      await loadConfig();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to delete keyword.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddKeyword = () => {
+    const value = keywordInput.trim();
+    if (!value) return;
+    const next = Array.from(new Set([...(config.customKeywords || []), value]));
+    setConfig({ customKeywords: next });
+    localStorage.setItem('sortflow.customKeywords', JSON.stringify(next));
+    setKeywordInput('');
+  };
+
+  const handleRemoveKeyword = (keyword: string) => {
+    const next = (config.customKeywords || []).filter(item => item !== keyword);
+    setConfig({ customKeywords: next });
+    localStorage.setItem('sortflow.customKeywords', JSON.stringify(next));
   };
 
   const handleRemovePreset = async (id: string) => {
@@ -187,6 +260,40 @@ export const ConfigurationPage: React.FC = () => {
             />
             <span>仅显示媒体文件（图片/视频），隐藏非媒体文件</span>
           </label>
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-sm font-black uppercase tracking-widest text-text-secondary">Pattern Mixer Keywords</h3>
+          <p className="text-xs text-text-secondary">添加自定义关键字供 Pattern Mixer 使用，例如：家庭、公园。</p>
+          <div className="flex flex-wrap gap-2">
+            {(config.customKeywords || []).map(keyword => (
+              <button
+                key={keyword}
+                onClick={() => handleRemoveKeyword(keyword)}
+                className="px-3 py-1.5 rounded-xl text-xs bg-surface-dark/60 border border-border-dark hover:border-red-400/60"
+                title="点击移除"
+              >
+                {keyword}
+              </button>
+            ))}
+            {(config.customKeywords || []).length === 0 && (
+              <span className="text-xs text-text-secondary">暂无关键字</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <input
+              value={keywordInput}
+              onChange={(event) => setKeywordInput(event.target.value)}
+              placeholder="输入关键字"
+              className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
+            />
+            <button
+              onClick={handleAddKeyword}
+              className="px-5 py-3 text-xs font-black uppercase tracking-widest bg-primary text-slate-900 rounded-xl shadow-lg"
+            >
+              Add Keyword
+            </button>
+          </div>
         </section>
 
         <section className="space-y-4">
@@ -284,6 +391,58 @@ export const ConfigurationPage: React.FC = () => {
           >
             Create Target
           </button>
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-sm font-black uppercase tracking-widest text-text-secondary">Mixer Keywords</h3>
+          <div className="grid gap-3">
+            {keywords.map(keyword => {
+              const draftValue = keywordEdits[keyword.id] ?? '';
+              const isDirty = draftValue.trim() !== keyword.name.trim();
+              const isInvalid = draftValue.trim().length === 0;
+              return (
+                <div key={keyword.id} className="flex flex-col gap-2 md:flex-row md:items-center bg-surface-dark/60 border border-border-dark rounded-2xl px-4 py-3">
+                  <input
+                    value={draftValue}
+                    onChange={(event) => setKeywordEdits(prev => ({ ...prev, [keyword.id]: event.target.value }))}
+                    className="flex-1 bg-black/30 border border-border-dark rounded-xl px-3 py-2 text-xs text-white"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleUpdateKeyword(keyword.id)}
+                      disabled={isInvalid || !isDirty}
+                      className="px-3 py-2 text-[10px] font-black uppercase tracking-widest bg-primary text-slate-900 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      保存
+                    </button>
+                    <button
+                      onClick={() => handleDeleteKeyword(keyword.id)}
+                      className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-300 hover:text-red-200"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {keywords.length === 0 && (
+              <div className="text-xs text-text-secondary">No keywords configured.</div>
+            )}
+          </div>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <input
+              value={keywordForm.name}
+              onChange={e => setKeywordForm({ name: e.target.value })}
+              placeholder="关键词（如：派对）"
+              className="flex-1 bg-black/30 border border-border-dark rounded-xl px-4 py-3 text-xs text-white"
+            />
+            <button
+              onClick={handleCreateKeyword}
+              className="px-5 py-3 text-xs font-black uppercase tracking-widest bg-primary text-slate-900 rounded-xl shadow-lg"
+            >
+              添加关键词
+            </button>
+          </div>
         </section>
 
         <section className="space-y-4">

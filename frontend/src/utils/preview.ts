@@ -32,22 +32,38 @@ export const buildPreviewOps = (
   activePreset: CategoryPreset,
   activeTarget: TargetRoot,
 ): PreviewOperation[] => {
-  const dateStr = new Date().toISOString().split('T')[0];
   const targetDir = joinPath(activeTarget.path, activePreset.targetSubPath);
 
   return selectedFiles
     .filter(file => !file.isDir)
     .map((file, idx, list) => {
       const nameParts: string[] = [];
-      if (mixerConfig.usePrefix) nameParts.push(activePreset.defaultPrefix || 'PRE_');
-      if (mixerConfig.useDate) nameParts.push(dateStr);
-
+      const tempKeyword = mixerConfig.tempKeyword?.trim();
       if (mixerConfig.useOriginal) {
         nameParts.push(getBaseName(file.name));
-      } else if (mixerConfig.selectedTokens && mixerConfig.selectedTokens.length > 0) {
-        nameParts.push(...mixerConfig.selectedTokens);
       } else {
-        nameParts.push(activePreset.name.toUpperCase());
+        const selectedParts = (
+          mixerConfig.selectedOrder && mixerConfig.selectedOrder.length > 0
+            ? mixerConfig.selectedOrder
+            : [
+                ...(mixerConfig.selectedTokens || []),
+                ...(mixerConfig.selectedKeywords || []),
+              ]
+        ).filter(Boolean);
+        if (selectedParts.length > 0) {
+          const seen = new Set<string>();
+          const uniqueParts = selectedParts.filter(part => {
+            if (seen.has(part)) return false;
+            seen.add(part);
+            return true;
+          });
+          nameParts.push(...uniqueParts);
+        } else {
+          nameParts.push(activePreset.name.toUpperCase());
+        }
+      }
+      if (tempKeyword) {
+        nameParts.push(tempKeyword);
       }
 
       const baseName = nameParts.join('_').replace(/_{2,}/g, '_');

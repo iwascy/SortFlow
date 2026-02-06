@@ -40,10 +40,11 @@ const getFileExtension = (name: string): string => {
   return name.slice(idx + 1).toLowerCase();
 };
 
-const getThumbnailUrl = (filePath: string) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-  return `${baseUrl}/files/thumbnail?path=${encodeURIComponent(filePath)}`;
-};
+const getBaseUrl = () => import.meta.env.VITE_API_BASE_URL || '/api/v1';
+
+const getThumbnailUrl = (filePath: string) => `${getBaseUrl()}/files/thumbnail?path=${encodeURIComponent(filePath)}`;
+
+const getFileContentUrl = (filePath: string) => `${getBaseUrl()}/files/content?path=${encodeURIComponent(filePath)}`;
 
 const normalizeFile = (file: BackendFileInfo): FileItem => {
   const ext = getFileExtension(file.name);
@@ -75,4 +76,5 @@ export const fileService = {
   },
 
   getThumbnailUrl,
+  getFileContentUrl,
 };

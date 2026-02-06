@@ -20,6 +20,7 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 
 	r.GET("/files/list", fileHandler.ListFiles)
 	r.GET("/files/thumbnail", fileHandler.Thumbnail)
+	r.GET("/files/content", fileHandler.Content)
 	r.GET("/files/metadata", fileHandler.Metadata)
 
 	r.POST("/preview", previewHandler.GeneratePreview)
@@ -40,6 +41,9 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	r.POST("/system/targets", systemHandler.CreateTarget)
 	r.PUT("/system/targets/:id", systemHandler.UpdateTarget)
 	r.DELETE("/system/targets/:id", systemHandler.DeleteTarget)
+	r.POST("/system/keywords", systemHandler.CreateKeyword)
+	r.PUT("/system/keywords/:id", systemHandler.UpdateKeyword)
+	r.DELETE("/system/keywords/:id", systemHandler.DeleteKeyword)
 	r.POST("/system/video-covers/generate", systemHandler.GenerateVideoCovers)
 
 	r.GET("/history", historyHandler.ListHistories)

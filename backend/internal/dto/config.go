@@ -1,9 +1,10 @@
 package dto
 
 type SystemConfigResponse struct {
-	Watchers []string    `json:"watchers"`
-	Targets  []TargetDTO `json:"targets"`
-	Presets  []PresetDTO `json:"presets"`
+	Watchers []string     `json:"watchers"`
+	Targets  []TargetDTO  `json:"targets"`
+	Presets  []PresetDTO  `json:"presets"`
+	Keywords []KeywordDTO `json:"keywords"`
 }
 
 type TargetDTO struct {
@@ -23,6 +24,12 @@ type PresetDTO struct {
 	Order         int    `json:"order"`
 }
 
+type KeywordDTO struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Order int    `json:"order"`
+}
+
 type WatcherRequest struct {
 	Path string `json:"path" binding:"required"`
 }
@@ -34,6 +41,11 @@ type PresetRequest struct {
 	TargetSubPath string `json:"targetSubPath"`
 	DefaultPrefix string `json:"defaultPrefix"`
 	Order         int    `json:"order"`
+}
+
+type KeywordRequest struct {
+	Name  string `json:"name" binding:"required"`
+	Order int    `json:"order"`
 }
 
 type PresetReorderRequest struct {

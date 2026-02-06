@@ -53,10 +53,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({ path, name, depth }) => {
       <button
         onClick={toggleExpand}
         className={cn(
-          "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-black transition-all group",
+          "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-black transition-colors group",
           isActive
             ? 'bg-primary text-slate-900 shadow-lg shadow-primary/20 scale-[1.02]'
-            : 'text-slate-400 hover:bg-surface-dark hover:text-white'
+            : 'text-slate-400 hover:text-white'
         )}
         style={{ paddingLeft: `${depth * 12 + 12}px` }}
       >

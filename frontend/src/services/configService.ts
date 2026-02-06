@@ -1,10 +1,11 @@
 import { request } from './api';
-import type { CategoryPreset, TargetRoot } from '../types';
+import type { CategoryPreset, Keyword, TargetRoot } from '../types';
 
 export interface SystemConfigResponse {
   watchers: string[];
   targets: TargetRoot[];
   presets: CategoryPreset[];
+  keywords: Keyword[];
 }
 
 export interface CreatePresetRequest {
@@ -20,6 +21,11 @@ export interface CreateTargetRequest {
   name: string;
   path: string;
   icon?: string;
+}
+
+export interface CreateKeywordRequest {
+  name: string;
+  order?: number;
 }
 
 export interface GenerateVideoCoversResponse {
@@ -57,6 +63,23 @@ export const configService = {
     request<TargetRoot>('/system/targets', {
       method: 'POST',
       body: JSON.stringify(payload),
+    }),
+
+  createKeyword: (payload: CreateKeywordRequest) =>
+    request<Keyword>('/system/keywords', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateKeyword: (id: string, payload: CreateKeywordRequest) =>
+    request<Keyword>(`/system/keywords/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteKeyword: (id: string) =>
+    request<void>(`/system/keywords/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
     }),
 
   deleteTarget: (id: string) =>

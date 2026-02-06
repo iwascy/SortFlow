@@ -36,15 +36,18 @@ func (h *SystemHandler) GetConfig(c *gin.Context) {
 	var watchers []model.SourceWatcher
 	var targets []model.TargetRoot
 	var presets []model.Preset
+	var keywords []model.Keyword
 
 	h.db.Find(&watchers)
 	h.db.Find(&targets)
 	h.db.Find(&presets)
+	h.db.Find(&keywords)
 
 	response := dto.SystemConfigResponse{
 		Watchers: make([]string, 0, len(watchers)),
 		Targets:  make([]dto.TargetDTO, 0, len(targets)),
 		Presets:  make([]dto.PresetDTO, 0, len(presets)),
+		Keywords: make([]dto.KeywordDTO, 0, len(keywords)),
 	}
 
 	for _, watcher := range watchers {
@@ -69,6 +72,14 @@ func (h *SystemHandler) GetConfig(c *gin.Context) {
 			TargetSubPath: preset.TargetSubPath,
 			DefaultPrefix: preset.DefaultPrefix,
 			Order:         preset.Order,
+		})
+	}
+
+	for _, keyword := range keywords {
+		response.Keywords = append(response.Keywords, dto.KeywordDTO{
+			ID:    keyword.ID,
+			Name:  keyword.Name,
+			Order: keyword.Order,
 		})
 	}
 
@@ -213,6 +224,46 @@ func (h *SystemHandler) UpdateTarget(c *gin.Context) {
 
 func (h *SystemHandler) DeleteTarget(c *gin.Context) {
 	if err := h.service.DeleteTarget(c.Param("id")); err != nil {
+		response.AbortWithError(c, response.Internal(err))
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func (h *SystemHandler) CreateKeyword(c *gin.Context) {
+	var request dto.KeywordRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response.AbortWithError(c, response.BadRequest(err))
+		return
+	}
+
+	keyword, err := h.service.CreateKeyword(request)
+	if err != nil {
+		response.AbortWithError(c, response.Internal(err))
+		return
+	}
+
+	c.JSON(http.StatusCreated, keyword)
+}
+
+func (h *SystemHandler) UpdateKeyword(c *gin.Context) {
+	var request dto.KeywordRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response.AbortWithError(c, response.BadRequest(err))
+		return
+	}
+
+	keyword, err := h.service.UpdateKeyword(c.Param("id"), request)
+	if err != nil {
+		response.AbortWithError(c, response.Internal(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, keyword)
+}
+
+func (h *SystemHandler) DeleteKeyword(c *gin.Context) {
+	if err := h.service.DeleteKeyword(c.Param("id")); err != nil {
 		response.AbortWithError(c, response.Internal(err))
 		return
 	}

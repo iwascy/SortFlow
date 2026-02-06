@@ -30,6 +30,12 @@ export interface CategoryPreset {
   order?: number;
 }
 
+export interface Keyword {
+  id: string;
+  name: string;
+  order?: number;
+}
+
 export interface MixerConfig {
   presetId: string | null;
   targetRootId: string | null;
@@ -39,11 +45,14 @@ export interface MixerConfig {
   tokens: string[];
   selectedTokenIndices: number[];
   customPrefix: string;
+  tempKeyword: string;
   // Added fields to match demo state
   usePrefix: boolean;
   useDate: boolean;
   useOriginal: boolean;
   selectedTokens: string[];
+  selectedKeywords: string[];
+  selectedOrder: string[];
 }
 
 export type PreviewStatus = 'ready' | 'auto_renamed' | 'error';
@@ -76,6 +85,7 @@ export interface AppConfig {
   sourceWatchers: string[];
   theme: 'light' | 'dark';
   hideNonMedia: boolean;
+  customKeywords: string[];
 }
 
 export interface TaskStatus {

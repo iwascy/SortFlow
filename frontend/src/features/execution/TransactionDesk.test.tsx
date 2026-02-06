@@ -28,6 +28,8 @@ describe('TransactionDesk', () => {
                 useDate: false,
                 useOriginal: false,
                 selectedTokens: [],
+                selectedKeywords: [],
+                selectedOrder: [],
             },
             updateMixerConfig,
             isPreviewLoading: false,

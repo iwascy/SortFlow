@@ -17,6 +17,7 @@ export const Dashboard: React.FC = () => {
     setCurrentPath,
     setPresets,
     setTargetRoots,
+    setKeywords,
     setExecutionState,
     selectedIds,
     previewOps,
@@ -24,6 +25,7 @@ export const Dashboard: React.FC = () => {
     clearSelection,
     setIsLoadingFiles,
     setConfig,
+    updateMixerConfig,
     mixerConfig,
     presets,
     targetRoots,
@@ -75,10 +77,12 @@ export const Dashboard: React.FC = () => {
     const loadConfig = async () => {
       try {
         const config = await configService.getConfig();
-        setConfig({ sourceWatchers: config.watchers || [], theme: 'dark' });
+        const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
+        setConfig({ sourceWatchers: config.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         const sortedPresets = (config.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setPresets(sortedPresets.length ? sortedPresets : PRESETS);
         setTargetRoots((config.targets || []).length ? config.targets : TARGET_ROOTS);
+        setKeywords(config.keywords || []);
         if (config.watchers?.length) {
           const nextPath = currentPath && isWithinWatcher(currentPath, config.watchers)
             ? currentPath
@@ -89,9 +93,11 @@ export const Dashboard: React.FC = () => {
         }
       } catch (error) {
         console.error(error);
-        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'dark' });
+        const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
+        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         setPresets(PRESETS);
         setTargetRoots(TARGET_ROOTS);
+        setKeywords([]);
         if (!currentPath) {
           setCurrentPath(INITIAL_FILES[0]?.path || '/nas/upload/raw');
         }
@@ -224,6 +230,7 @@ export const Dashboard: React.FC = () => {
         targetPath
       });
       setExecutionState({ taskId });
+      updateMixerConfig({ tempKeyword: '' });
     } catch (error) {
       console.error(error);
       setExecutionState({ status: 'ERROR', error: 'Failed to start execution' });
@@ -252,7 +259,7 @@ export const Dashboard: React.FC = () => {
       <TransactionDesk onExecute={handleExecute} />
 
       {executionState.status !== 'IDLE' && (
-        <div className="fixed bottom-6 right-6 z-50 w-[280px] rounded-2xl border border-border-dark bg-surface-dark/80 p-4 shadow-2xl backdrop-blur">
+        <div className="fixed bottom-6 right-6 lg:right-[440px] z-[80] w-[280px] rounded-2xl border border-border-dark bg-surface-dark/80 p-4 shadow-2xl backdrop-blur">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
               <div className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
