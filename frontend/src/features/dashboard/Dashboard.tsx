@@ -24,6 +24,7 @@ export const Dashboard: React.FC = () => {
     clearSelection,
     setIsLoadingFiles,
     setConfig,
+    updateMixerConfig,
     mixerConfig,
     presets,
     targetRoots,
@@ -226,6 +227,7 @@ export const Dashboard: React.FC = () => {
         targetPath
       });
       setExecutionState({ taskId });
+      updateMixerConfig({ tempKeyword: '' });
     } catch (error) {
       console.error(error);
       setExecutionState({ status: 'ERROR', error: 'Failed to start execution' });
