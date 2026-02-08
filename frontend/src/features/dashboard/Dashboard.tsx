@@ -78,7 +78,7 @@ export const Dashboard: React.FC = () => {
       try {
         const config = await configService.getConfig();
         const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
-        setConfig({ sourceWatchers: config.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
+        setConfig({ sourceWatchers: config.watchers || [], theme: 'light', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         const sortedPresets = (config.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setPresets(sortedPresets.length ? sortedPresets : PRESETS);
         setTargetRoots((config.targets || []).length ? config.targets : TARGET_ROOTS);
@@ -94,7 +94,7 @@ export const Dashboard: React.FC = () => {
       } catch (error) {
         console.error(error);
         const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
-        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
+        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'light', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         setPresets(PRESETS);
         setTargetRoots(TARGET_ROOTS);
         setKeywords([]);
@@ -238,16 +238,19 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen flex-col lg:flex-row bg-background-dark relative animate-in fade-in overflow-hidden">
+    <div className="flex h-screen flex-col lg:flex-row bg-background-light relative animate-in fade-in overflow-hidden">
       <Sidebar />
 
       {/* Main Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 bg-surface-dark/10 overflow-hidden">
-        <header className="px-8 py-4 flex items-center justify-between bg-background-dark border-b border-border-dark z-10 animate-in fade-in slide-in-from-top duration-500">
+      <div className="flex-1 flex flex-col min-w-0 bg-background-light overflow-hidden">
+        <header className="px-8 py-6 flex items-center justify-between bg-surface-light border-b border-border-light z-10 animate-in fade-in slide-in-from-top duration-500">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">folder_open</span>
-              <h2 className="text-xs font-black text-white tracking-widest uppercase truncate max-w-[300px]">{currentPath}</h2>
+              <span className="material-symbols-outlined text-primary text-[28px]">folder_open</span>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Current Location</span>
+                <h2 className="text-lg font-bold text-text-primary tracking-tight truncate max-w-[400px]">{currentPath}</h2>
+              </div>
             </div>
           </div>
         </header>
@@ -259,38 +262,42 @@ export const Dashboard: React.FC = () => {
       <TransactionDesk onExecute={handleExecute} />
 
       {executionState.status !== 'IDLE' && (
-        <div className="fixed bottom-6 right-6 lg:right-[440px] z-[80] w-[280px] rounded-2xl border border-border-dark bg-surface-dark/80 p-4 shadow-2xl backdrop-blur">
+        <div className="fixed bottom-6 right-6 lg:right-[440px] z-[80] w-[320px] rounded-2xl border border-border-light bg-white/90 p-5 shadow-xl backdrop-blur-md">
           <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <div className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
-                后台任务
+            <div className="space-y-1 w-full">
+              <div className="flex justify-between items-center w-full">
+                  <div className="text-[11px] font-bold uppercase tracking-widest text-text-tertiary">
+                    Background Tasks
+                  </div>
+                   {(executionState.status === 'DONE' || executionState.status === 'ERROR') && (
+                    <button
+                        onClick={() => setExecutionState({ status: 'IDLE', logs: [], progress: 0, error: undefined })}
+                        className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-hover bg-primary/10 px-2 py-1 rounded-md transition-colors"
+                    >
+                        Close
+                    </button>
+                    )}
               </div>
-              <div className="text-sm font-black text-white">
-                {executionState.status === 'EXECUTING' && '正在执行'}
-                {executionState.status === 'DONE' && '已完成'}
-                {executionState.status === 'ERROR' && '执行失败'}
+              <div className="text-sm font-bold text-text-primary mt-1">
+                {executionState.status === 'EXECUTING' && 'Processing files...'}
+                {executionState.status === 'DONE' && 'Task Completed'}
+                {executionState.status === 'ERROR' && 'Task Failed'}
               </div>
-              <div className="text-[10px] text-text-secondary">
-                {executionState.status === 'EXECUTING' && `进度 ${executionState.progress}%`}
-                {executionState.status === 'DONE' && `已处理 ${executionState.totalFiles} 项`}
-                {executionState.status === 'ERROR' && (executionState.error || '请检查日志或重试')}
+              <div className="text-xs text-text-secondary">
+                {executionState.status === 'EXECUTING' && `Progress: ${executionState.progress}%`}
+                {executionState.status === 'DONE' && `Successfully processed ${executionState.totalFiles} items`}
+                {executionState.status === 'ERROR' && (executionState.error || 'Check logs for details')}
               </div>
             </div>
-            {(executionState.status === 'DONE' || executionState.status === 'ERROR') && (
-              <button
-                onClick={() => setExecutionState({ status: 'IDLE', logs: [], progress: 0, error: undefined })}
-                className="text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-white"
-              >
-                关闭
-              </button>
-            )}
           </div>
           {executionState.status === 'EXECUTING' && (
-            <div className="mt-3 h-2 rounded-full bg-black/40">
+            <div className="mt-4 h-2 rounded-full bg-gray-100 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary via-cyan-400 to-primary transition-all duration-300"
+                className="h-full rounded-full bg-primary transition-all duration-300 relative overflow-hidden"
                 style={{ width: `${executionState.progress}%` }}
-              />
+              >
+                  <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+              </div>
             </div>
           )}
         </div>

@@ -1,15 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #11b4d4;
-  --color-background-light: #f6f8f8;
-  --color-background-dark: #0a1315;
-  --color-surface-dark: #132327;
-  --color-border-dark: #234248;
-  --color-text-secondary: #92c0c9;
+  /* Updated Palette based on Dribbble Reference (Light/Purple) */
+  --color-primary: #8b5cf6; /* Purple-500 */
+  --color-primary-hover: #7c3aed; /* Purple-600 */
+  --color-secondary: #3b82f6; /* Blue-500 */
+  --color-accent: #f59e0b; /* Amber-500 */
+
+  --color-background-light: #f3f4f6; /* Gray-100 */
+  --color-background-dark: #1f2937; /* Gray-800 (for dark mode support if needed) */
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #111827; /* Gray-900 */
+
+  --color-text-primary: #111827; /* Gray-900 */
+  --color-text-secondary: #6b7280; /* Gray-500 */
+  --color-text-tertiary: #9ca3af; /* Gray-400 */
+
+  --color-border-light: #e5e7eb; /* Gray-200 */
+  --color-border-dark: #374151; /* Gray-700 */
 
   --font-display: "Inter", "sans-serif";
   --font-mono: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace";
+
+  --radius-xl: 1rem; /* 16px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-md: 0.5rem; /* 8px */
 
   --animate-in: in 0.5s ease-out;
   --animate-fade-in: fade-in 0.5s ease-out;
@@ -74,6 +89,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    transition: font-variation-settings 0.2s ease;
 }
 
 .material-symbols-outlined.filled {
@@ -86,29 +102,29 @@
     height: 6px;
 }
 ::-webkit-scrollbar-track {
-    background: #0a1315;
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #234248;
+    background: #d1d5db; /* Gray-300 */
     border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #325e67;
+    background: #9ca3af; /* Gray-400 */
 }
 
 @layer base {
   body {
-    @apply bg-background-dark text-white font-display antialiased;
+    @apply bg-background-light text-text-primary font-display antialiased;
   }
 }
 
-/* Custom Glow Effects */
+/* Custom Glow Effects (Updated for Light Theme) */
 .active-glow-primary {
-  box-shadow: 0 0 20px rgba(17, 180, 212, 0.4);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); /* Purple Glow */
 }
 
 .active-glow-soft {
-  box-shadow: 0 0 15px rgba(17, 180, 212, 0.2);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
 }
 
 /* Demo-specific layout constraints */

@@ -28,33 +28,33 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   const getIcon = () => {
     switch (variant) {
       case 'danger':
-        return <span className="material-symbols-outlined text-red-600">warning</span>;
+        return <span className="material-symbols-outlined text-red-500 text-[24px]">warning</span>;
       case 'warning':
-        return <span className="material-symbols-outlined text-amber-500">warning</span>;
+        return <span className="material-symbols-outlined text-amber-500 text-[24px]">warning</span>;
       default:
-        return <span className="material-symbols-outlined text-blue-500">info</span>;
+        return <span className="material-symbols-outlined text-primary text-[24px]">info</span>;
     }
   };
 
   const footer = (
-    <>
-      <Button
-        variant={variant === 'danger' ? 'danger' : 'primary'}
-        onClick={onConfirm}
-        isLoading={isLoading}
-        className="w-full sm:ml-3 sm:w-auto"
-      >
-        {confirmText}
-      </Button>
+    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:ml-auto">
       <Button
         variant="secondary"
         onClick={onClose}
         disabled={isLoading}
-        className="mt-3 w-full sm:mt-0 sm:ml-3 sm:w-auto"
+        className="w-full sm:w-auto"
       >
         {cancelText}
       </Button>
-    </>
+      <Button
+        variant={variant === 'danger' ? 'danger' : 'primary'}
+        onClick={onConfirm}
+        isLoading={isLoading}
+        className="w-full sm:w-auto"
+      >
+        {confirmText}
+      </Button>
+    </div>
   );
 
   return (
@@ -62,14 +62,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {getIcon()}
           <span>{title}</span>
         </div>
       }
       footer={footer}
     >
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-text-secondary leading-relaxed">
         {message}
       </div>
     </Modal>

@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { cn } from '../../utils/cn';
 import { tokenize } from '../../utils/tokenizer';
 
 export const MixerPanel: React.FC = () => {
   const { mixerConfig, updateMixerConfig, files, selectedIds, config, keywords } = useAppStore();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const selectedFiles = useMemo(() => files.filter(f => selectedIds.has(f.id) && !f.isDir), [files, selectedIds]);
 
@@ -43,14 +44,20 @@ export const MixerPanel: React.FC = () => {
   };
 
   return (
-    <div className="shrink-0 bg-background-dark border-b border-border-dark p-8 space-y-6 shadow-xl z-10 animate-in fade-in slide-in-from-top duration-700 delay-100 fill-mode-both">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Pattern Mixer</h3>
-          <p className="text-[9px] text-text-secondary font-medium">Define rules for renaming batch assets</p>
+    <div className="shrink-0 bg-white border-b border-gray-200 px-8 py-6 shadow-sm z-10 animate-in fade-in slide-in-from-top duration-500">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10 text-primary">
+            <span className="material-symbols-outlined text-[24px]">tune</span>
+          </div>
+          <div className="flex flex-col">
+            <h3 className="text-sm font-bold text-text-primary">Pattern Mixer</h3>
+            <p className="text-xs text-text-secondary">Renaming rules & metadata extraction</p>
+          </div>
         </div>
-        <div className="flex items-center gap-6 bg-surface-dark/40 px-6 py-3 rounded-2xl border border-border-dark">
-          <label className="flex items-center gap-3 cursor-pointer group">
+
+        <div className="flex items-center gap-4">
+           <label className="flex items-center gap-2 cursor-pointer group select-none">
             <input
               type="checkbox"
               checked={mixerConfig.useOriginal}
@@ -62,97 +69,75 @@ export const MixerPanel: React.FC = () => {
                   selectedOrder: e.target.checked ? [] : mixerConfig.selectedOrder,
                 });
               }}
-              className="form-checkbox size-4 rounded-md bg-background-dark border-border-dark text-primary focus:ring-primary focus:ring-offset-0 transition-all"
+              className="form-checkbox size-4 rounded bg-white border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 transition-all"
             />
             <span className={cn(
-              'text-[10px] font-black transition-colors tracking-widest',
-              mixerConfig.useOriginal ? 'text-primary' : 'text-white group-hover:text-primary'
-            )}>RAW_NAME</span>
+              'text-xs font-bold transition-colors',
+              mixerConfig.useOriginal ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary'
+            )}>Use Original Name</span>
           </label>
+
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-2 rounded-lg hover:bg-gray-100 text-text-secondary transition-colors"
+          >
+             <span className="material-symbols-outlined text-[20px]">{isExpanded ? 'expand_less' : 'expand_more'}</span>
+          </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border-dark bg-surface-dark/40 px-5 py-4 space-y-2">
-        <div className="text-[9px] uppercase tracking-widest text-text-secondary font-black">Temporary Keyword</div>
-        <input
-          value={mixerConfig.tempKeyword}
-          onChange={(event) => updateMixerConfig({ tempKeyword: event.target.value })}
-          placeholder="输入临时关键字，自动加到文件名"
-          className="w-full rounded-xl border border-border-dark bg-black/30 px-4 py-3 text-[11px] text-white placeholder:text-text-secondary/60 focus:border-primary focus:outline-none"
-        />
-        <p className="text-[9px] text-text-secondary">发起迁移任务后会自动清空。</p>
-      </div>
-
-      {!mixerConfig.useOriginal && (
-        <div className="pt-6 border-t border-border-dark/50 animate-in fade-in slide-in-from-top duration-500 space-y-4">
-          {keywordTokens.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-[9px] uppercase tracking-widest text-text-secondary font-black">Custom Keywords</div>
-              <div className="flex flex-wrap gap-3">
-                {keywordTokens.map((t, i) => (
-                  <button
-                    key={`keyword-${t}-${i}`}
-                    onClick={() => toggleToken(t)}
-                    className={cn(
-                      'px-4 py-2 rounded-xl text-[10px] font-mono font-black border transition-all',
-                      mixerConfig.selectedTokens.includes(t)
-                        ? 'bg-primary border-primary text-slate-900 shadow-[0_0_15px_rgba(17,180,212,0.3)] active-glow-primary'
-                        : 'bg-surface-dark border-border-dark text-text-secondary hover:text-white hover:border-primary/50'
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+      {isExpanded && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-top duration-300">
+            <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 space-y-2">
+                <label className="text-xs font-bold text-text-tertiary uppercase tracking-wider block">Temporary Keyword</label>
+                <input
+                value={mixerConfig.tempKeyword}
+                onChange={(event) => updateMixerConfig({ tempKeyword: event.target.value })}
+                placeholder="Add temporary keyword..."
+                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                />
+                <p className="text-[10px] text-text-tertiary">Will be cleared after execution.</p>
             </div>
-          )}
 
-          {tokens.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-[9px] uppercase tracking-widest text-text-secondary font-black">Filename Tokens</div>
-              <div className="flex flex-wrap gap-3">
-                {tokens.map((t, i) => (
-                  <button
-                    key={`file-token-${i}`}
-                    onClick={() => toggleToken(t)}
-                    className={cn(
-                      'px-4 py-2 rounded-xl text-[10px] font-mono font-black border transition-all',
-                      mixerConfig.selectedTokens.includes(t)
-                        ? 'bg-primary border-primary text-slate-900 shadow-[0_0_15px_rgba(17,180,212,0.3)] active-glow-primary'
-                        : 'bg-surface-dark border-border-dark text-text-secondary hover:text-white hover:border-primary/50'
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {!mixerConfig.useOriginal && keywords.length > 0 && (
-        <div className="pt-6 border-t border-border-dark/50 animate-in fade-in slide-in-from-top duration-500">
-          <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest mb-3">
-            Custom Keywords
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {keywords.map((keyword, i) => (
-              <button
-                key={keyword.id}
-                onClick={() => toggleKeyword(keyword.name)}
-                style={{ animationDelay: `${i * 50}ms` }}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-[10px] font-mono font-black border transition-all animate-in fade-in zoom-in-95 fill-mode-both",
-                  mixerConfig.selectedKeywords.includes(keyword.name)
-                    ? 'bg-primary border-primary text-slate-900 shadow-[0_0_15px_rgba(17,180,212,0.3)] active-glow-primary'
-                    : 'bg-surface-dark border-border-dark text-text-secondary hover:text-white hover:border-primary/50'
+            {!mixerConfig.useOriginal && (
+                <div className="pt-4 border-t border-gray-100 space-y-4">
+                {(keywordTokens.length > 0 || tokens.length > 0) && (
+                    <div className="space-y-3">
+                    <div className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Available Tokens</div>
+                    <div className="flex flex-wrap gap-2">
+                        {keywordTokens.map((t, i) => (
+                        <button
+                            key={`keyword-${t}-${i}`}
+                            onClick={() => toggleToken(t)}
+                            className={cn(
+                            'px-3 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all shadow-sm',
+                            mixerConfig.selectedTokens.includes(t)
+                                ? 'bg-primary text-white border-primary shadow-primary/20'
+                                : 'bg-white border-gray-200 text-text-secondary hover:bg-gray-50 hover:text-text-primary'
+                            )}
+                        >
+                            {t}
+                        </button>
+                        ))}
+                        {tokens.map((t, i) => (
+                        <button
+                            key={`file-token-${i}`}
+                            onClick={() => toggleToken(t)}
+                            className={cn(
+                            'px-3 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all shadow-sm',
+                            mixerConfig.selectedTokens.includes(t)
+                                ? 'bg-primary text-white border-primary shadow-primary/20'
+                                : 'bg-white border-gray-200 text-text-secondary hover:bg-gray-50 hover:text-text-primary'
+                            )}
+                        >
+                            {t}
+                        </button>
+                        ))}
+                    </div>
+                    </div>
                 )}
-              >
-                {keyword.name}
-              </button>
-            ))}
-          </div>
+                </div>
+            )}
         </div>
       )}
     </div>

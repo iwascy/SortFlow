@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { fileService } from '../../services/fileService';
 import { cn } from '../../utils/cn';
@@ -24,6 +24,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({ path, name, depth }) => {
     setIsLoading(true);
     try {
       const response = await fileService.listFiles(path);
+      // Filter directories and sort alphabetically
       const dirs = response.files
         .filter(f => f.isDir)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -36,7 +37,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({ path, name, depth }) => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isExpanded) {
       void fetchChildren();
     }
@@ -45,49 +46,62 @@ export const TreeItem: React.FC<TreeItemProps> = ({ path, name, depth }) => {
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsExpanded(!isExpanded);
+  };
+
+  const handleSelect = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setCurrentPath(path);
+    if (!isExpanded) {
+        setIsExpanded(true);
+    }
   };
 
   return (
     <div className="flex flex-col">
-      <button
-        onClick={toggleExpand}
+      <div
         className={cn(
-          "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-black transition-colors group",
+          "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 cursor-pointer group",
           isActive
-            ? 'bg-primary text-slate-900 shadow-lg shadow-primary/20 scale-[1.02]'
-            : 'text-slate-400 hover:text-white'
+            ? 'bg-primary/10 text-primary font-bold shadow-sm ring-1 ring-primary/20'
+            : 'text-text-secondary hover:bg-gray-100 hover:text-text-primary'
         )}
-        style={{ paddingLeft: `${depth * 12 + 12}px` }}
+        style={{ paddingLeft: `${depth * 16 + 12}px` }}
+        onClick={handleSelect}
       >
-        <span className={cn(
-          "material-symbols-outlined text-[18px] transition-transform duration-200",
-          isExpanded ? "rotate-90" : "",
-          isActive ? "text-slate-900" : "text-slate-500",
-          (hasLoaded && children.length === 0) ? "opacity-0 pointer-events-none" : "opacity-100"
-        )}>
-          chevron_right
-        </span>
+        <button
+            onClick={toggleExpand}
+            className="p-0.5 rounded-md hover:bg-black/5 text-text-tertiary transition-colors"
+        >
+            <span className={cn(
+            "material-symbols-outlined text-[18px] transition-transform duration-200 block",
+            isExpanded ? "rotate-90" : "",
+            isActive ? "text-primary" : "text-text-tertiary group-hover:text-text-secondary",
+            (hasLoaded && children.length === 0) ? "opacity-30 pointer-events-none" : "opacity-100"
+            )}>
+            chevron_right
+            </span>
+        </button>
+
         <span className={cn(
           "material-symbols-outlined text-[20px]",
-          isActive ? "filled text-slate-900" : "text-primary"
+          isActive ? "filled text-primary" : "text-text-tertiary group-hover:text-primary/70"
         )}>
           {path.includes('nas') ? 'dns' : (depth === 0 ? 'sd_card' : 'folder')}
         </span>
-        <span className="truncate">{name}</span>
+        <span className="truncate flex-1">{name}</span>
         {isLoading && (
-          <span className="material-symbols-outlined text-[14px] animate-spin ml-auto">
+          <span className="material-symbols-outlined text-[14px] animate-spin text-primary">
             progress_activity
           </span>
         )}
-      </button>
+      </div>
 
       {isExpanded && (
-        <div className="flex flex-col mt-1">
+        <div className="flex flex-col mt-0.5">
           {children.map((child) => (
             <TreeItem
-              key={child.sourcePath || child.id}
-              path={child.sourcePath || ''}
+              key={child.sourcePath || child.id} // Use sourcePath or ID as key
+              path={child.sourcePath || `${path}/${child.name}`} // Construct path if sourcePath missing (mock data fallback)
               name={child.name}
               depth={depth + 1}
             />
