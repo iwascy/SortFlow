@@ -1,25 +1,41 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #11b4d4;
-  --color-background-light: #f6f8f8;
-  --color-background-dark: #0a1315;
-  --color-surface-dark: #132327;
-  --color-border-dark: #234248;
-  --color-text-secondary: #92c0c9;
+  --color-primary: #8b5cf6;
+  --color-primary-dark: #7c3aed;
+  --color-primary-light: #a78bfa;
+  --color-secondary: #64748b;
 
-  --font-display: "Inter", "sans-serif";
+  --color-bg-page: #f3f4f6;
+  --color-bg-surface: #ffffff;
+  --color-bg-sidebar: #ffffff;
+  --color-bg-muted: #f9fafb;
+
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+
+  --color-border: #e5e7eb;
+  --color-border-hover: #d1d5db;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+
+  --font-display: "Inter", system-ui, sans-serif;
   --font-mono: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace";
 
-  --animate-in: in 0.5s ease-out;
-  --animate-fade-in: fade-in 0.5s ease-out;
-  --animate-zoom-in: zoom-in 0.5s ease-out;
-  --animate-slide-in-right: slide-in-right 0.5s ease-out;
+  --animate-in: in 0.3s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-zoom-in: zoom-in 0.3s ease-out;
+  --animate-slide-in-right: slide-in-right 0.3s ease-out;
+  --animate-slide-in-up: slide-in-up 0.3s ease-out;
 
   @keyframes in {
     from {
       opacity: 0;
-      transform: scale(0.95);
+      transform: scale(0.98);
     }
     to {
       opacity: 1;
@@ -33,13 +49,18 @@
   }
 
   @keyframes zoom-in {
-    from { transform: scale(0.95); }
-    to { transform: scale(1); }
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
 
   @keyframes slide-in-right {
     from { transform: translateX(20px); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes slide-in-up {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 }
 
@@ -56,6 +77,9 @@
 }
 @utility slide-in-from-right {
   animation: var(--animate-slide-in-right);
+}
+@utility slide-in-from-bottom {
+  animation: var(--animate-slide-in-up);
 }
 
 /* Material Symbols configuration */
@@ -74,44 +98,49 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    transition: all 0.2s ease;
 }
 
 .material-symbols-outlined.filled {
     font-variation-settings: 'FILL' 1;
 }
 
-/* Scrollbar Styling */
+/* Scrollbar Styling - Light Theme */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 ::-webkit-scrollbar-track {
-    background: #0a1315;
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #234248;
+    background: #d1d5db;
     border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #325e67;
+    background: #9ca3af;
 }
 
 @layer base {
   body {
-    @apply bg-background-dark text-white font-display antialiased;
+    @apply bg-bg-page text-text-primary font-display antialiased;
+  }
+
+  /* Reset button styles */
+  button {
+    @apply cursor-pointer;
   }
 }
 
-/* Custom Glow Effects */
+/* Custom Utilities */
 .active-glow-primary {
-  box-shadow: 0 0 20px rgba(17, 180, 212, 0.4);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
 }
 
-.active-glow-soft {
-  box-shadow: 0 0 15px rgba(17, 180, 212, 0.2);
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
 }
 
-/* Demo-specific layout constraints */
 .layout-max-width {
   max-width: 1920px;
   margin: 0 auto;

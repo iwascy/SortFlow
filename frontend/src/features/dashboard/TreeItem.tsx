@@ -53,37 +53,37 @@ export const TreeItem: React.FC<TreeItemProps> = ({ path, name, depth }) => {
       <button
         onClick={toggleExpand}
         className={cn(
-          "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-black transition-colors group",
+          "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all group",
           isActive
-            ? 'bg-primary text-slate-900 shadow-lg shadow-primary/20 scale-[1.02]'
-            : 'text-slate-400 hover:text-white'
+            ? 'bg-primary/10 text-primary'
+            : 'text-text-secondary hover:bg-bg-muted hover:text-text-primary'
         )}
-        style={{ paddingLeft: `${depth * 12 + 12}px` }}
+        style={{ paddingLeft: `${depth * 16 + 12}px` }}
       >
         <span className={cn(
-          "material-symbols-outlined text-[18px] transition-transform duration-200",
+          "material-symbols-outlined text-[16px] transition-transform duration-200",
           isExpanded ? "rotate-90" : "",
-          isActive ? "text-slate-900" : "text-slate-500",
+          isActive ? "text-primary" : "text-text-muted group-hover:text-text-secondary",
           (hasLoaded && children.length === 0) ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
-          chevron_right
+          arrow_right
         </span>
         <span className={cn(
-          "material-symbols-outlined text-[20px]",
-          isActive ? "filled text-slate-900" : "text-primary"
+          "material-symbols-outlined text-[18px]",
+          isActive ? "filled text-primary" : "text-amber-500"
         )}>
-          {path.includes('nas') ? 'dns' : (depth === 0 ? 'sd_card' : 'folder')}
+          {path.includes('nas') ? 'dns' : (depth === 0 ? 'folder_open' : 'folder')}
         </span>
         <span className="truncate">{name}</span>
         {isLoading && (
-          <span className="material-symbols-outlined text-[14px] animate-spin ml-auto">
+          <span className="material-symbols-outlined text-[14px] animate-spin ml-auto text-primary">
             progress_activity
           </span>
         )}
       </button>
 
       {isExpanded && (
-        <div className="flex flex-col mt-1">
+        <div className="flex flex-col mt-0.5">
           {children.map((child) => (
             <TreeItem
               key={child.sourcePath || child.id}

@@ -1,67 +1,69 @@
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { cn } from '../../utils/cn';
 
-export const ExecutionOverlay: React.FC = () => {
-  const { executionState, setExecutionState } = useAppStore();
-  const [isDone, setIsDone] = useState(false);
+interface ExecutionOverlayProps {
+    onClose: () => void;
+}
 
-  useEffect(() => {
-    setIsDone(executionState.status === 'DONE');
-  }, [executionState.status]);
+export const ExecutionOverlay: React.FC<ExecutionOverlayProps> = ({ onClose }) => {
+    const { executionState } = useAppStore();
+    const [history, setHistory] = useState<string[]>([]);
 
-  if (executionState.status !== 'EXECUTING' && executionState.status !== 'DONE' && executionState.status !== 'ERROR') {
-      return null;
-  }
+    useEffect(() => {
+        if (executionState.logs) {
+            setHistory(prev => [...prev, ...executionState.logs]);
+        }
+    }, [executionState.logs]);
 
-  const isError = executionState.status === 'ERROR';
-  const isExecuting = executionState.status === 'EXECUTING';
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 animate-in fade-in duration-300">
+            <div className="w-full max-w-2xl space-y-8 relative">
+                <button
+                    onClick={onClose}
+                    className="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors"
+                >
+                    <span className="material-symbols-outlined text-4xl">close</span>
+                </button>
 
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center h-full w-full bg-[#0a1315] p-12 overflow-hidden">
-      <div className="w-full max-w-2xl space-y-12 animate-in fade-in zoom-in-95 duration-500 fill-mode-both">
-        <div className="text-center space-y-4">
-          <div className="inline-flex size-24 rounded-full bg-primary/10 items-center justify-center ring-4 ring-primary/5 mb-6">
-            <span className={`material-symbols-outlined text-5xl text-primary ${isExecuting ? 'animate-spin' : 'filled'}`}>
-              {isError ? 'error' : isDone ? 'done_all' : 'sync'}
-            </span>
-          </div>
-          <h2 className="text-4xl font-black text-white tracking-tighter">
-            {isError ? 'Execution Failed' : isDone ? 'Archive Sync Complete' : 'Organizing Data'}
-          </h2>
-          <p className="text-text-secondary font-medium">
-             {isError ? (executionState.error || 'Unable to complete the execution.') : (
-               <>Relocating assets to <span className="text-white font-mono">Target Storage</span></>
-             )}
-          </p>
+                <div className="space-y-4 bg-white p-8 rounded-[2rem] border border-border shadow-2xl">
+                   <div className="flex justify-between items-center">
+                       <h2 className="text-2xl font-black text-text-primary">Executing Task</h2>
+                       <span className={cn(
+                           "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest",
+                           executionState.status === 'EXECUTING' ? "bg-primary/10 text-primary" :
+                           executionState.status === 'DONE' ? "bg-emerald-100 text-emerald-600" :
+                           "bg-red-100 text-red-600"
+                       )}>
+                           {executionState.status}
+                       </span>
+                   </div>
+
+                   <div className="h-5 bg-bg-muted rounded-full p-1 border border-border shadow-inner overflow-hidden">
+                       <div
+                         className="h-full bg-primary rounded-full transition-all duration-300 ease-out relative overflow-hidden"
+                         style={{ width: `${executionState.progress}%` }}
+                       >
+                           <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                       </div>
+                   </div>
+
+                   <div className="flex justify-between text-xs font-bold text-text-secondary uppercase tracking-widest">
+                       <span>Processed: {executionState.processedFiles} / {executionState.totalFiles}</span>
+                       <span>{executionState.progress}%</span>
+                   </div>
+                </div>
+
+                <div className="bg-slate-900 rounded-3xl p-6 border border-slate-700 font-mono text-[10px] h-60 overflow-y-auto space-y-2 text-slate-300 shadow-xl">
+                    {history.map((log, i) => (
+                        <div key={i} className="border-b border-slate-800 pb-1 last:border-0 break-all">
+                            <span className="text-slate-500 mr-2">[{new Date().toLocaleTimeString()}]</span>
+                            {log}
+                        </div>
+                    ))}
+                    {history.length === 0 && <span className="opacity-50">Initializing...</span>}
+                </div>
+            </div>
         </div>
-        <div className="space-y-4 bg-surface-dark/50 p-8 rounded-[2rem] border border-border-dark shadow-2xl">
-           <div className="flex justify-between items-end mb-2">
-              <span className="text-[11px] font-black text-primary uppercase tracking-[0.3em]">Processing Batch</span>
-              <span className="text-4xl font-black text-white font-mono">{executionState.progress}%</span>
-           </div>
-           <div className="h-5 bg-black rounded-full p-1 border border-border-dark shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-primary via-cyan-400 to-primary rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(17,180,212,0.4)]"
-                style={{ width: `${executionState.progress}%` }}
-              />
-           </div>
-        </div>
-        <div className="bg-black/30 rounded-3xl p-6 border border-border-dark font-mono text-[10px] h-40 overflow-hidden space-y-2 opacity-60">
-           {executionState.logs.map((log, i) => (
-             <div key={i} className="flex gap-4 animate-in fade-in slide-in-from-right duration-300">
-                <span className="text-primary/40">[{i.toString().padStart(2, '0')}]</span> {log}
-             </div>
-           ))}
-        </div>
-        {(isDone || isError) && (
-          <button
-            onClick={() => setExecutionState({ status: 'IDLE', logs: [], progress: 0 })}
-            className="w-full bg-primary text-slate-900 font-black py-5 rounded-[2rem] shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95 animate-in fade-in zoom-in-95 delay-300 fill-mode-both"
-          >
-            RETURN TO WORKSPACE
-          </button>
-        )}
-      </div>
-    </div>
-  );
+    );
 };
