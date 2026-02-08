@@ -114,11 +114,11 @@ export const Dashboard: React.FC = () => {
   }, [clearSelection, currentPath, loadFiles]);
 
   useEffect(() => {
-    if (executionState.status === 'DONE') {
-      clearSelection();
-      if (currentPath) {
-        void loadFiles(currentPath, false);
-      }
+    const isTerminal = executionState.status === 'DONE' || executionState.status === 'ERROR';
+    if (!isTerminal) return;
+    clearSelection();
+    if (currentPath) {
+      void loadFiles(currentPath, false);
     }
   }, [clearSelection, currentPath, executionState.status, loadFiles]);
 

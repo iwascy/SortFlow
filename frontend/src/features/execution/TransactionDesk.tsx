@@ -3,6 +3,13 @@ import { useAppStore } from '../../store/useAppStore';
 import { cn } from '../../utils/cn';
 import { buildPreviewOps, getTargetDir } from '../../utils/preview';
 
+const shortenName = (name: string, max = 22) => {
+  if (name.length <= max) return name;
+  const head = Math.max(8, Math.floor((max - 1) * 0.6));
+  const tail = Math.max(5, max - head - 1);
+  return `${name.slice(0, head)}…${name.slice(-tail)}`;
+};
+
 export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute }) => {
   const {
     selectedIds,
@@ -121,12 +128,12 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
           <span className="text-[9px] font-black text-text-secondary uppercase tracking-widest">Queue Preview</span>
           <div className="space-y-3 max-h-56 overflow-y-auto pr-2">
             {previewOps.map((op, i) => (
-              <div key={op.id} className="flex items-center gap-4 text-[10px] text-text-secondary/60 animate-in fade-in slide-in-from-right" style={{ animationDelay: `${Math.min(i, 10) * 80}ms` }}>
+              <div key={op.id} className="flex items-start gap-4 text-[10px] text-text-secondary/60 animate-in fade-in slide-in-from-right" style={{ animationDelay: `${Math.min(i, 10) * 80}ms` }}>
                 <span className="size-2 rounded-full bg-primary/40 shrink-0" />
-                <div className="min-w-0 flex-1 flex items-center gap-2">
-                  <span className="truncate text-text-secondary/70">{op.originalName}</span>
+                <div className="min-w-0 flex-1 flex items-start gap-2">
+                  <span className="shrink-0 text-text-secondary/70">{shortenName(op.originalName)}</span>
                   <span className="shrink-0 text-primary/60">→</span>
-                  <span className="truncate text-white">{op.newName}</span>
+                  <span className="min-w-0 break-all text-white leading-relaxed">{op.newName}</span>
                 </div>
               </div>
             ))}
