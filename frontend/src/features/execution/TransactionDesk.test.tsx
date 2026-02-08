@@ -42,7 +42,7 @@ describe('TransactionDesk', () => {
     it('renders selection count', () => {
         render(<TransactionDesk onExecute={() => {}} />);
         expect(screen.getByText('1')).toBeInTheDocument();
-        expect(screen.getByText(/Items Queued/i)).toBeInTheDocument();
+        expect(screen.getByText(/Queued/i)).toBeInTheDocument();
     });
 
     it('renders presets', () => {
@@ -61,7 +61,7 @@ describe('TransactionDesk', () => {
         const handleExecute = vi.fn();
         render(<TransactionDesk onExecute={handleExecute} />);
 
-        fireEvent.click(screen.getByText(/COMMIT TO ARCHIVE/i));
+        fireEvent.click(screen.getByText(/Execute Task/i));
         expect(handleExecute).toHaveBeenCalled();
     });
 });

@@ -40,7 +40,7 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/50 backdrop-blur-sm p-4 sm:p-6 md:p-20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/40 backdrop-blur-sm p-4 sm:p-6 md:p-20 animate-in fade-in duration-200">
       <div
         className="fixed inset-0 transition-opacity"
         onClick={onClose}
@@ -48,18 +48,18 @@ export const Modal: React.FC<ModalProps> = ({
       />
 
       <div className={cn(
-        "relative w-full transform rounded-lg bg-white text-left shadow-xl transition-all sm:my-8",
+        "relative w-full transform rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 border border-gray-100 animate-in zoom-in-95 duration-200",
         width,
         className
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 sm:px-6">
-          <h3 className="text-lg font-medium leading-6 text-gray-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-text-primary">
             {title}
           </h3>
           <button
             type="button"
-            className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="p-1 rounded-lg bg-transparent text-text-tertiary hover:bg-gray-100 hover:text-text-primary focus:outline-none transition-colors"
             onClick={onClose}
           >
             <span className="sr-only">Close</span>
@@ -68,13 +68,13 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="px-4 py-5 sm:p-6">
+        <div className="px-6 py-6">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 rounded-b-lg">
+          <div className="bg-gray-50/50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl border-t border-gray-100 gap-3">
             {footer}
           </div>
         )}

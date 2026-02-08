@@ -29,9 +29,9 @@ describe('useAppStore Selection', () => {
     expect(useAppStore.getState().selectedIds.has('2')).toBe(false);
     expect(useAppStore.getState().selectedIds.size).toBe(1);
 
-    // Clicking again should toggle it off
+    // Clicking again should keep it selected (single selection mode always selects)
     toggleSelection('1', false, false);
-    expect(useAppStore.getState().selectedIds.has('1')).toBe(false);
+    expect(useAppStore.getState().selectedIds.has('1')).toBe(true);
   });
 
   it('multi selection adds to selection', () => {
