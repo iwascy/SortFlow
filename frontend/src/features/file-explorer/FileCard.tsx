@@ -1,69 +1,72 @@
 import React from 'react';
 import type { FileItem } from '../../types';
+import { isMediaFileName, formatSize } from '../../utils/media';
 import { cn } from '../../utils/cn';
 
 interface FileCardProps {
   file: FileItem;
-  selected?: boolean;
-  onClick?: (e: React.MouseEvent) => void;
-  onDoubleClick?: (e: React.MouseEvent) => void;
+  selected: boolean;
+  onClick: (event: React.MouseEvent) => void;
+  onDoubleClick: (event: React.MouseEvent) => void;
   animationDelay?: string;
 }
 
-export const FileCard: React.FC<FileCardProps> = ({
-  file,
-  selected,
-  onClick,
-  onDoubleClick,
-  animationDelay,
-}) => {
+export const FileCard: React.FC<FileCardProps> = ({ file, selected, onClick, onDoubleClick, animationDelay }) => {
+  const isMedia = !file.isDir && isMediaFileName(file.name);
+
+  // Use a softer color palette for file types
+  const iconColorClass = file.isDir
+    ? "text-amber-500 bg-amber-50"
+    : isMedia
+      ? "text-purple-600 bg-purple-50"
+      : "text-slate-500 bg-slate-50";
+
   return (
     <div
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       style={{ animationDelay }}
       className={cn(
-        "group relative flex flex-col gap-4 p-4 rounded-[2rem] transition-all cursor-pointer border animate-in fade-in zoom-in-95 fill-mode-both",
+        "group relative flex flex-col p-4 rounded-2xl border transition-all duration-200 cursor-pointer animate-in zoom-in-95 fill-mode-both",
         selected
-          ? 'bg-primary/5 border-primary ring-1 ring-primary/20 shadow-2xl active-glow-soft'
-          : 'bg-surface-dark border-border-dark hover:border-primary/50 hover:shadow-xl hover:scale-[1.02]'
+          ? "bg-primary/5 border-primary shadow-md ring-1 ring-primary/20"
+          : "bg-white border-border hover:border-primary/30 hover:shadow-lg hover:-translate-y-1"
       )}
     >
-      <div className="w-full aspect-square rounded-[1.5rem] overflow-hidden relative bg-slate-900 shadow-inner">
-        {file.thumbnail ? (
-          <img
-            src={file.thumbnail}
-            alt={file.alt || file.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <span className="material-symbols-outlined text-gray-500 text-5xl">
-              {file.type === 'dir' ? 'folder' : 'description'}
-            </span>
+      <div className="flex justify-between items-start mb-3">
+        <div className={cn("size-12 rounded-xl flex items-center justify-center transition-colors", iconColorClass)}>
+          <span className="material-symbols-outlined text-[28px] filled">
+            {file.isDir ? 'folder' : isMedia ? 'image' : 'description'}
+          </span>
+        </div>
+
+        {selected && (
+          <div className="absolute top-3 right-3">
+             <span className="material-symbols-outlined text-primary filled text-[20px]">check_circle</span>
           </div>
         )}
-        <div className="absolute top-4 right-4 px-3 py-1 rounded-xl bg-black/60 backdrop-blur-xl text-[9px] font-black text-white border border-white/10">
-            {file.type}
-        </div>
-        {selected && (
-            <div className="absolute top-4 left-4 bg-primary text-slate-900 p-2 rounded-2xl shadow-xl animate-in zoom-in-50">
-                <span className="material-symbols-outlined text-[16px] font-black filled">check</span>
-            </div>
-        )}
       </div>
-      <div className="px-2 min-w-0">
-        <p className={cn(
-            "text-[12px] font-black truncate mb-1 transition-colors",
-            selected ? 'text-primary' : 'text-white group-hover:text-primary'
+
+      <div className="flex flex-col gap-1 min-w-0">
+        <h3 className={cn(
+            "font-semibold text-sm truncate transition-colors",
+            selected ? "text-primary-dark" : "text-text-primary group-hover:text-primary"
         )}>
             {file.name}
-        </p>
-        <div className="flex justify-between text-[10px] font-bold text-text-secondary/40">
-           <span className="font-mono">{file.size}</span>
-           <span className="uppercase tracking-widest">{file.type}</span>
+        </h3>
+        <div className="flex items-center gap-2 text-[11px] text-text-secondary font-medium">
+          <span>{file.isDir ? 'Folder' : formatSize(typeof file.size === 'number' ? file.size : 0)}</span>
+          <span className="size-1 rounded-full bg-border" />
+          <span className="truncate opacity-70">
+            {new Date(file.mtime).toLocaleDateString()}
+          </span>
         </div>
       </div>
+
+      {/* Thumbnail Preview for Images (Mock) */}
+      {isMedia && !file.isDir && (
+         <div className="absolute inset-0 z-[-1] opacity-0 group-hover:opacity-5 transition-opacity bg-gradient-to-br from-primary to-transparent rounded-2xl" />
+      )}
     </div>
   );
 };

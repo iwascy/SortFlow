@@ -78,7 +78,7 @@ export const Dashboard: React.FC = () => {
       try {
         const config = await configService.getConfig();
         const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
-        setConfig({ sourceWatchers: config.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
+        setConfig({ sourceWatchers: config.watchers || [], theme: 'light', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         const sortedPresets = (config.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setPresets(sortedPresets.length ? sortedPresets : PRESETS);
         setTargetRoots((config.targets || []).length ? config.targets : TARGET_ROOTS);
@@ -94,7 +94,7 @@ export const Dashboard: React.FC = () => {
       } catch (error) {
         console.error(error);
         const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
-        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
+        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'light', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
         setPresets(PRESETS);
         setTargetRoots(TARGET_ROOTS);
         setKeywords([]);
@@ -238,57 +238,72 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen flex-col lg:flex-row bg-background-dark relative animate-in fade-in overflow-hidden">
-      <Sidebar />
+    <div className="flex h-screen flex-col lg:flex-row bg-[var(--color-bg-page)] relative animate-in fade-in overflow-hidden gap-6 p-6">
 
-      {/* Main Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 bg-surface-dark/10 overflow-hidden">
-        <header className="px-8 py-4 flex items-center justify-between bg-background-dark border-b border-border-dark z-10 animate-in fade-in slide-in-from-top duration-500">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">folder_open</span>
-              <h2 className="text-xs font-black text-white tracking-widest uppercase truncate max-w-[300px]">{currentPath}</h2>
-            </div>
+      {/* LEFT COLUMN: Source Watchers (Local Sidebar) - Now styled as a Card */}
+      <div className="hidden lg:flex flex-col w-64 shrink-0 gap-6">
+          <Sidebar />
+          {/* We can put other small widgets here if needed, e.g. recent activity summary */}
+      </div>
+
+      {/* MIDDLE COLUMN: Main Workspace (Files) */}
+      <div className="flex-1 flex flex-col min-w-0 bg-[var(--color-bg-surface)] rounded-3xl shadow-sm border border-border overflow-hidden relative">
+        <header className="px-8 py-6 flex items-center justify-between bg-white border-b border-border z-10">
+          <div className="flex flex-col gap-1">
+             <h2 className="text-2xl font-bold text-text-primary tracking-tight">All Files</h2>
+             <div className="flex items-center gap-2 text-text-secondary text-sm">
+                <span className="material-symbols-outlined text-[18px] text-text-muted">folder_open</span>
+                <span className="truncate max-w-[400px] font-medium opacity-80">{currentPath}</span>
+             </div>
           </div>
         </header>
 
-        <MixerPanel />
+        {/* This panel can be collapsible or integrated better */}
+        <div className="px-6 pt-4">
+             <MixerPanel />
+        </div>
+
         <FileGrid />
       </div>
 
-      <TransactionDesk onExecute={handleExecute} />
+      {/* RIGHT COLUMN: Transaction Desk & Stats */}
+      <div className="w-full lg:w-[400px] xl:w-[420px] flex flex-col gap-6 shrink-0 overflow-hidden">
+          <TransactionDesk onExecute={handleExecute} />
+      </div>
 
+      {/* Floating Status Notification */}
       {executionState.status !== 'IDLE' && (
-        <div className="fixed bottom-6 right-6 lg:right-[440px] z-[80] w-[280px] rounded-2xl border border-border-dark bg-surface-dark/80 p-4 shadow-2xl backdrop-blur">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <div className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
-                后台任务
+        <div className="fixed bottom-8 right-8 z-[100] w-[320px] rounded-2xl border border-border bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1.5 flex-1">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                Background Task
               </div>
-              <div className="text-sm font-black text-white">
-                {executionState.status === 'EXECUTING' && '正在执行'}
-                {executionState.status === 'DONE' && '已完成'}
-                {executionState.status === 'ERROR' && '执行失败'}
+              <div className="text-base font-bold text-text-primary flex items-center gap-2">
+                {executionState.status === 'EXECUTING' && <span className="w-2 h-2 rounded-full bg-primary animate-pulse"/>}
+                {executionState.status === 'EXECUTING' && 'Processing Files...'}
+                {executionState.status === 'DONE' && 'Task Completed'}
+                {executionState.status === 'ERROR' && 'Task Failed'}
               </div>
-              <div className="text-[10px] text-text-secondary">
-                {executionState.status === 'EXECUTING' && `进度 ${executionState.progress}%`}
-                {executionState.status === 'DONE' && `已处理 ${executionState.totalFiles} 项`}
-                {executionState.status === 'ERROR' && (executionState.error || '请检查日志或重试')}
+              <div className="text-xs text-text-secondary font-medium">
+                {executionState.status === 'EXECUTING' && `Progress: ${executionState.progress}%`}
+                {executionState.status === 'DONE' && `Successfully processed ${executionState.totalFiles} items.`}
+                {executionState.status === 'ERROR' && (executionState.error || 'Please check logs.')}
               </div>
             </div>
             {(executionState.status === 'DONE' || executionState.status === 'ERROR') && (
               <button
                 onClick={() => setExecutionState({ status: 'IDLE', logs: [], progress: 0, error: undefined })}
-                className="text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-white"
+                className="p-1.5 rounded-full hover:bg-bg-muted text-text-muted hover:text-text-primary transition-colors"
               >
-                关闭
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             )}
           </div>
           {executionState.status === 'EXECUTING' && (
-            <div className="mt-3 h-2 rounded-full bg-black/40">
+            <div className="mt-4 h-1.5 rounded-full bg-bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary via-cyan-400 to-primary transition-all duration-300"
+                className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
                 style={{ width: `${executionState.progress}%` }}
               />
             </div>
