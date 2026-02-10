@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #11b4d4;
+  --color-background-light: #f6f8f8;
+  --color-background-dark: #0a1315;
+  --color-surface-dark: #132327;
+  --color-border-dark: #234248;
+  --color-text-secondary: #92c0c9;
+
+  --font-display: "Inter", "sans-serif";
+  --font-mono: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace";
+
+  --animate-in: in 0.5s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-zoom-in: zoom-in 0.5s ease-out;
+  --animate-slide-in-right: slide-in-right 0.5s ease-out;
+
+  @keyframes in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes zoom-in {
+    from { transform: scale(0.95); }
+    to { transform: scale(1); }
+  }
+
+  @keyframes slide-in-right {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+@utility animate-in {
+  animation: var(--animate-in);
+}
+@utility fade-in {
+  animation: var(--animate-fade-in);
+}
+@utility zoom-in-95 {
+  animation: var(--animate-zoom-in);
+}
+@utility slide-in-from-right {
+  animation: var(--animate-slide-in-right);
+}
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined' !important;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0a1315;
+}
+::-webkit-scrollbar-thumb {
+    background: #234248;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #325e67;
+}
+
+@layer base {
+  body {
+    @apply bg-background-dark text-white font-display antialiased;
+  }
+}
+
+/* Custom Glow Effects */
+.active-glow-primary {
+  box-shadow: 0 0 20px rgba(17, 180, 212, 0.4);
+}
+
+.active-glow-soft {
+  box-shadow: 0 0 15px rgba(17, 180, 212, 0.2);
+}
+
+/* Demo-specific layout constraints */
+.layout-max-width {
+  max-width: 1920px;
+  margin: 0 auto;
+}
