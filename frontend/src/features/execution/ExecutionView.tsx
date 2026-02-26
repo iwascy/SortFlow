@@ -11,6 +11,7 @@ export const ExecutionView: React.FC = () => {
     previewOps,
     selectedIds,
     files,
+    config,
     mixerConfig,
     presets,
     targetRoots
@@ -31,7 +32,13 @@ export const ExecutionView: React.FC = () => {
 
     const computedPreviewOps = previewOps.length
       ? previewOps
-      : buildPreviewOps(files.filter(f => selectedIds.has(f.id)), mixerConfig, activePreset, activeTarget);
+      : buildPreviewOps(
+          files.filter(f => selectedIds.has(f.id)),
+          mixerConfig,
+          activePreset,
+          activeTarget,
+          { appendRandomSuffix: config.appendRandomSuffix },
+        );
     const actions = computedPreviewOps
       .filter(op => op.originalPath && op.newPath)
       .map(op => ({

@@ -69,6 +69,18 @@ export const MixerPanel: React.FC = () => {
               mixerConfig.useOriginal ? 'text-primary' : 'text-white group-hover:text-primary'
             )}>RAW_NAME</span>
           </label>
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={mixerConfig.isCollection}
+              onChange={e => updateMixerConfig({ isCollection: e.target.checked })}
+              className="form-checkbox size-4 rounded-md bg-background-dark border-border-dark text-primary focus:ring-primary focus:ring-offset-0 transition-all"
+            />
+            <span className={cn(
+              'text-[10px] font-black transition-colors tracking-widest',
+              mixerConfig.isCollection ? 'text-primary' : 'text-white group-hover:text-primary'
+            )}>集合</span>
+          </label>
         </div>
       </div>
 

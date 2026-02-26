@@ -22,20 +22,32 @@ export interface TaskResponse {
   logs: string;
 }
 
-const mapTaskStatus = (status: TaskResponse['status']): ExecutionState['status'] => {
-  if (status === 'running') return 'EXECUTING';
-  if (status === 'completed') return 'DONE';
+type TaskPayload = Partial<TaskResponse> & {
+  ID?: string;
+  Status?: TaskResponse['status'];
+  Progress?: number;
+  Logs?: string;
+};
+
+const mapTaskStatus = (status?: string): ExecutionState['status'] => {
+  const normalized = (status || '').toLowerCase();
+  if (normalized === 'running') return 'EXECUTING';
+  if (normalized === 'completed') return 'DONE';
   return 'ERROR';
 };
 
-export const toExecutionUpdate = (task: TaskResponse): Partial<ExecutionState> => {
-  const progress = Math.max(0, Math.min(100, Math.round((task.progress || 0) * 100)));
-  const logs = task.logs ? task.logs.split('\n').filter(Boolean) : [];
+export const toExecutionUpdate = (task: TaskPayload): Partial<ExecutionState> => {
+  const status = task.status ?? task.Status;
+  const progressRaw = task.progress ?? task.Progress ?? 0;
+  const logsRaw = task.logs ?? task.Logs ?? '';
+  const normalizedStatus = (status || '').toLowerCase();
+  const progress = Math.max(0, Math.min(100, Math.round(progressRaw * 100)));
+  const logs = logsRaw ? logsRaw.split('\n').filter(Boolean) : [];
   return {
-    status: mapTaskStatus(task.status),
+    status: mapTaskStatus(status),
     progress,
     logs,
-    error: task.status === 'failed' ? 'Task failed' : task.status === 'cancelled' ? 'Task cancelled' : undefined,
+    error: normalizedStatus === 'failed' ? 'Task failed' : normalizedStatus === 'cancelled' ? 'Task cancelled' : undefined,
   };
 };
 
@@ -47,7 +59,7 @@ export const executeService = {
     }),
 
   getTaskProgress: async (taskId: string): Promise<Partial<ExecutionState>> => {
-    const task = await request<TaskResponse>(`/tasks/${taskId}`, { method: 'GET' });
+    const task = await request<TaskPayload>(`/tasks/${taskId}`, { method: 'GET' });
     return toExecutionUpdate(task);
   },
 };

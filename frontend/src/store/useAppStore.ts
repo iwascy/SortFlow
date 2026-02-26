@@ -65,6 +65,7 @@ const DEFAULT_MIXER_CONFIG: MixerConfig = {
   useRename: true,
   renamePattern: 'PREFIX',
   dateSource: 'CURRENT',
+  isCollection: false,
   tokens: [],
   selectedTokenIndices: [],
   customPrefix: '',
@@ -88,7 +89,7 @@ const DEFAULT_EXECUTION_STATE: ExecutionState = {
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial State
-  config: { sourceWatchers: [], theme: 'light', hideNonMedia: false, customKeywords: [] },
+  config: { sourceWatchers: [], theme: 'light', hideNonMedia: false, customKeywords: [], appendRandomSuffix: false },
   targetRoots: [],
   presets: [],
   keywords: [],
@@ -137,6 +138,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleSelection: (id, multi, range) => {
     const { selectedIds, files, lastSelectedId } = get();
     const newSelected = new Set(multi ? selectedIds : []);
+    const isAlreadySelected = selectedIds.has(id);
 
     if (range && lastSelectedId) {
       const lastIdx = files.findIndex(f => f.id === lastSelectedId);
@@ -151,6 +153,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         newSelected.add(id);
       }
     } else {
+      if (!multi && isAlreadySelected && selectedIds.size === 1) {
+        set({ selectedIds: new Set(), lastSelectedId: id });
+        return;
+      }
       if (newSelected.has(id)) {
         newSelected.delete(id);
       } else {

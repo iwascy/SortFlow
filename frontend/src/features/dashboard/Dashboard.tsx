@@ -10,6 +10,9 @@ import { executeService, toExecutionUpdate, type TaskResponse } from '../../serv
 import { configService } from '../../services/configService';
 import { buildPreviewOps, getTargetDir } from '../../utils/preview';
 
+const CUSTOM_KEYWORDS_STORAGE_KEY = 'sortflow.customKeywords';
+const APPEND_RANDOM_SUFFIX_STORAGE_KEY = 'sortflow.appendRandomSuffix';
+
 export const Dashboard: React.FC = () => {
   const {
     currentPath,
@@ -25,6 +28,7 @@ export const Dashboard: React.FC = () => {
     clearSelection,
     setIsLoadingFiles,
     setConfig,
+    config,
     updateMixerConfig,
     mixerConfig,
     presets,
@@ -76,25 +80,37 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const config = await configService.getConfig();
-        const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
-        setConfig({ sourceWatchers: config.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
-        const sortedPresets = (config.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const responseConfig = await configService.getConfig();
+        const savedKeywords = JSON.parse(localStorage.getItem(CUSTOM_KEYWORDS_STORAGE_KEY) || '[]');
+        const appendRandomSuffix = localStorage.getItem(APPEND_RANDOM_SUFFIX_STORAGE_KEY) === '1';
+        setConfig({
+          sourceWatchers: responseConfig.watchers || [],
+          theme: 'dark',
+          customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [],
+          appendRandomSuffix,
+        });
+        const sortedPresets = (responseConfig.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setPresets(sortedPresets.length ? sortedPresets : PRESETS);
-        setTargetRoots((config.targets || []).length ? config.targets : TARGET_ROOTS);
-        setKeywords(config.keywords || []);
-        if (config.watchers?.length) {
-          const nextPath = currentPath && isWithinWatcher(currentPath, config.watchers)
+        setTargetRoots((responseConfig.targets || []).length ? responseConfig.targets : TARGET_ROOTS);
+        setKeywords(responseConfig.keywords || []);
+        if (responseConfig.watchers?.length) {
+          const nextPath = currentPath && isWithinWatcher(currentPath, responseConfig.watchers)
             ? currentPath
-            : config.watchers[0];
+            : responseConfig.watchers[0];
           if (nextPath && nextPath !== currentPath) {
             setCurrentPath(nextPath);
           }
         }
       } catch (error) {
         console.error(error);
-        const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
-        setConfig({ sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))), theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
+        const savedKeywords = JSON.parse(localStorage.getItem(CUSTOM_KEYWORDS_STORAGE_KEY) || '[]');
+        const appendRandomSuffix = localStorage.getItem(APPEND_RANDOM_SUFFIX_STORAGE_KEY) === '1';
+        setConfig({
+          sourceWatchers: Array.from(new Set(INITIAL_FILES.map(file => file.path))),
+          theme: 'dark',
+          customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [],
+          appendRandomSuffix,
+        });
         setPresets(PRESETS);
         setTargetRoots(TARGET_ROOTS);
         setKeywords([]);
@@ -197,7 +213,13 @@ export const Dashboard: React.FC = () => {
 
     const computedPreviewOps = previewOps.length
       ? previewOps
-      : buildPreviewOps(files.filter(f => selectedIds.has(f.id)), mixerConfig, activePreset, activeTarget);
+      : buildPreviewOps(
+          files.filter(f => selectedIds.has(f.id)),
+          mixerConfig,
+          activePreset,
+          activeTarget,
+          { appendRandomSuffix: config.appendRandomSuffix },
+        );
     const actions = computedPreviewOps
       .filter(op => op.originalPath && op.newPath)
       .map(op => ({

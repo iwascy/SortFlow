@@ -1,5 +1,7 @@
 import type { CategoryPreset, FileItem, MixerConfig, PreviewOperation, TargetRoot } from '../types';
 
+const RANDOM_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
 const joinPath = (...parts: string[]) => {
   if (parts.length === 0) return '';
   const [first, ...rest] = parts;
@@ -26,11 +28,25 @@ const getExtension = (name: string) => {
   return name.slice(idx + 1);
 };
 
+const randomToken = (length = 5) => {
+  let result = '';
+  for (let i = 0; i < length; i += 1) {
+    const idx = Math.floor(Math.random() * RANDOM_CHARS.length);
+    result += RANDOM_CHARS[idx];
+  }
+  return result;
+};
+
+interface BuildPreviewOptions {
+  appendRandomSuffix?: boolean;
+}
+
 export const buildPreviewOps = (
   selectedFiles: FileItem[],
   mixerConfig: MixerConfig,
   activePreset: CategoryPreset,
   activeTarget: TargetRoot,
+  options?: BuildPreviewOptions,
 ): PreviewOperation[] => {
   const targetDir = joinPath(activeTarget.path, activePreset.targetSubPath);
 
@@ -67,11 +83,12 @@ export const buildPreviewOps = (
       }
 
       const baseName = nameParts.join('_').replace(/_{2,}/g, '_');
-      const finalSuffix = list.length > 1 ? `_${String(idx + 1).padStart(3, '0')}` : '';
+      const finalSuffix = mixerConfig.isCollection && list.length > 1 ? `_${String(idx + 1).padStart(3, '0')}` : '';
+      const randomSuffix = options?.appendRandomSuffix ? `_${randomToken(5)}` : '';
       const extension = getExtension(file.name);
       const newName = extension
-        ? `${baseName}${finalSuffix}.${extension.toLowerCase()}`
-        : `${baseName}${finalSuffix}`;
+        ? `${baseName}${finalSuffix}${randomSuffix}.${extension.toLowerCase()}`
+        : `${baseName}${finalSuffix}${randomSuffix}`;
 
       const originalPath = file.sourcePath || joinPath(file.path, file.name);
       const newPath = joinPath(targetDir, newName);

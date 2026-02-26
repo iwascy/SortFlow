@@ -42,6 +42,7 @@ export interface MixerConfig {
   useRename: boolean;
   renamePattern: 'PREFIX' | 'DATE' | 'RAW_NAME';
   dateSource: 'EXIF' | 'FILE_CREATED' | 'CURRENT';
+  isCollection: boolean;
   tokens: string[];
   selectedTokenIndices: number[];
   customPrefix: string;
@@ -86,6 +87,7 @@ export interface AppConfig {
   theme: 'light' | 'dark';
   hideNonMedia: boolean;
   customKeywords: string[];
+  appendRandomSuffix: boolean;
 }
 
 export interface TaskStatus {

@@ -21,6 +21,7 @@ describe('TransactionDesk', () => {
         (useAppStore as any).mockReturnValue({
             selectedIds: new Set(['1']),
             files: mockFiles,
+            config: { appendRandomSuffix: false },
             mixerConfig: {
                 presetId: 'scenery',
                 targetRootId: 'nas-photos',

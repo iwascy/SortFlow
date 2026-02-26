@@ -13,6 +13,7 @@ const shortenName = (name: string, max = 22) => {
 export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute }) => {
   const {
     selectedIds,
+    config,
     mixerConfig,
     updateMixerConfig,
     files,
@@ -32,8 +33,10 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
 
   const previewOps = useMemo(() => {
     if (!activePreset || !activeTarget) return [];
-    return buildPreviewOps(selectedFiles, mixerConfig, activePreset, activeTarget);
-  }, [selectedFiles, mixerConfig, activePreset, activeTarget]);
+    return buildPreviewOps(selectedFiles, mixerConfig, activePreset, activeTarget, {
+      appendRandomSuffix: config.appendRandomSuffix,
+    });
+  }, [selectedFiles, mixerConfig, activePreset, activeTarget, config.appendRandomSuffix]);
 
   useEffect(() => {
     setPreviewOps(previewOps);

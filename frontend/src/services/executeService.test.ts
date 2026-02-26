@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { executeService } from './executeService';
+import { executeService, toExecutionUpdate } from './executeService';
 import * as api from './api';
 
 describe('executeService', () => {
@@ -36,5 +36,19 @@ describe('executeService', () => {
     });
     await executeService.getTaskProgress('task-1');
     expect(requestSpy).toHaveBeenCalledWith('/tasks/task-1', expect.objectContaining({ method: 'GET' }));
+  });
+
+  it('toExecutionUpdate supports legacy uppercase task payload', () => {
+    const update = toExecutionUpdate({
+      ID: 'task-1',
+      Status: 'completed',
+      Progress: 1,
+      Logs: 'line 1\nline 2\n',
+    });
+
+    expect(update.status).toBe('DONE');
+    expect(update.progress).toBe(100);
+    expect(update.logs).toEqual(['line 1', 'line 2']);
+    expect(update.error).toBeUndefined();
   });
 });

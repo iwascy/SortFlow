@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { configService } from '../../services/configService';
 
+const CUSTOM_KEYWORDS_STORAGE_KEY = 'sortflow.customKeywords';
+const APPEND_RANDOM_SUFFIX_STORAGE_KEY = 'sortflow.appendRandomSuffix';
+
 export const ConfigurationPage: React.FC = () => {
   const { config, presets, targetRoots, keywords, setConfig, setPresets, setTargetRoots, setKeywords } = useAppStore();
   const [loading, setLoading] = useState(false);
@@ -27,14 +30,22 @@ export const ConfigurationPage: React.FC = () => {
     setError(null);
     try {
       const response = await configService.getConfig();
-      const savedKeywords = JSON.parse(localStorage.getItem('sortflow.customKeywords') || '[]');
-      setConfig({ sourceWatchers: response.watchers || [], theme: 'dark', customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [] });
+      const savedKeywords = JSON.parse(localStorage.getItem(CUSTOM_KEYWORDS_STORAGE_KEY) || '[]');
+      const appendRandomSuffix = localStorage.getItem(APPEND_RANDOM_SUFFIX_STORAGE_KEY) === '1';
+      setConfig({
+        sourceWatchers: response.watchers || [],
+        theme: 'dark',
+        customKeywords: Array.isArray(savedKeywords) ? savedKeywords : [],
+        appendRandomSuffix,
+      });
       const sortedPresets = (response.presets || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setPresets(sortedPresets);
       setTargetRoots(response.targets || []);
       setKeywords(response.keywords || []);
     } catch (err) {
       console.error(err);
+      const appendRandomSuffix = localStorage.getItem(APPEND_RANDOM_SUFFIX_STORAGE_KEY) === '1';
+      setConfig({ appendRandomSuffix });
       setError('Failed to load configuration.');
     } finally {
       setLoading(false);
@@ -202,14 +213,19 @@ export const ConfigurationPage: React.FC = () => {
     if (!value) return;
     const next = Array.from(new Set([...(config.customKeywords || []), value]));
     setConfig({ customKeywords: next });
-    localStorage.setItem('sortflow.customKeywords', JSON.stringify(next));
+    localStorage.setItem(CUSTOM_KEYWORDS_STORAGE_KEY, JSON.stringify(next));
     setKeywordInput('');
   };
 
   const handleRemoveKeyword = (keyword: string) => {
     const next = (config.customKeywords || []).filter(item => item !== keyword);
     setConfig({ customKeywords: next });
-    localStorage.setItem('sortflow.customKeywords', JSON.stringify(next));
+    localStorage.setItem(CUSTOM_KEYWORDS_STORAGE_KEY, JSON.stringify(next));
+  };
+
+  const handleToggleAppendRandomSuffix = (enabled: boolean) => {
+    setConfig({ appendRandomSuffix: enabled });
+    localStorage.setItem(APPEND_RANDOM_SUFFIX_STORAGE_KEY, enabled ? '1' : '0');
   };
 
   const handleRemovePreset = async (id: string) => {
@@ -259,6 +275,15 @@ export const ConfigurationPage: React.FC = () => {
               className="h-4 w-4 accent-primary"
             />
             <span>仅显示媒体文件（图片/视频），隐藏非媒体文件</span>
+          </label>
+          <label className="flex items-center gap-3 rounded-2xl border border-border-dark bg-surface-dark/60 px-4 py-3 text-xs">
+            <input
+              type="checkbox"
+              checked={config.appendRandomSuffix}
+              onChange={(event) => handleToggleAppendRandomSuffix(event.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            <span>迁移命名末尾追加 5 位随机字母数字（自定义命名 + 随机串）</span>
           </label>
         </section>
 

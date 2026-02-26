@@ -1,0 +1,4 @@
+interface:
+  display_name: "LeetCode Pattern Coach"
+  short_description: "Summarize problem patterns and suggest hot variants"
+  default_prompt: "Use $leetcode-pattern-coach to analyze this LeetCode problem and recommend a focused variant practice set."
