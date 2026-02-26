@@ -5,6 +5,7 @@ export interface OrganizeActionPayload {
   sourcePath: string;
   targetPath: string;
   operation: 'move' | 'copy';
+  allowOverwrite?: boolean;
 }
 
 export interface ExecutePayload {
@@ -13,6 +14,19 @@ export interface ExecutePayload {
   presetId?: string;
   targetRootId?: string;
   targetPath: string;
+}
+
+export interface DuplicateCheckPayload {
+  targetPath: string;
+  actions: OrganizeActionPayload[];
+}
+
+export interface DuplicateConflict {
+  sourcePath: string;
+  sourceName: string;
+  targetPath: string;
+  existingPath: string;
+  existingName: string;
 }
 
 export interface TaskResponse {
@@ -42,6 +56,11 @@ export const toExecutionUpdate = (task: TaskResponse): Partial<ExecutionState> =
 export const executeService = {
   executeTask: (payload: ExecutePayload) =>
     request<{ taskId: string }>('/organize/execute', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  checkDuplicates: (payload: DuplicateCheckPayload) =>
+    request<{ conflicts: DuplicateConflict[] }>('/organize/duplicates', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

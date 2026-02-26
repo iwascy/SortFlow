@@ -10,7 +10,15 @@ const shortenName = (name: string, max = 22) => {
   return `${name.slice(0, head)}…${name.slice(-tail)}`;
 };
 
-export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute }) => {
+interface TransactionDeskProps {
+  onExecute: () => void;
+  isCheckingDuplicates?: boolean;
+}
+
+export const TransactionDesk: React.FC<TransactionDeskProps> = ({
+  onExecute,
+  isCheckingDuplicates = false
+}) => {
   const {
     selectedIds,
     mixerConfig,
@@ -147,13 +155,15 @@ export const TransactionDesk: React.FC<{ onExecute: () => void }> = ({ onExecute
           <span className="text-white font-mono">{previewOps.length * 22.4} MB</span>
         </div>
         <button
-          disabled={previewOps.length === 0 || isPreviewLoading}
+          disabled={previewOps.length === 0 || isPreviewLoading || isCheckingDuplicates}
           onClick={onExecute}
-          className="w-full bg-primary hover:bg-cyan-400 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed text-slate-900 font-black py-6 rounded-[2.5rem] shadow-2xl shadow-primary/30 transition-all flex items-center justify-center gap-4 active:scale-95 group overflow-hidden"
+          className="relative w-full bg-primary hover:bg-cyan-400 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed text-slate-900 font-black py-6 rounded-[2.5rem] shadow-2xl shadow-primary/30 transition-all flex items-center justify-center gap-4 active:scale-95 group overflow-hidden"
         >
-          <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
-          <span className="material-symbols-outlined font-black text-2xl filled">rocket_launch</span>
-          COMMIT TO ARCHIVE
+          <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12 pointer-events-none" />
+          <span className={`material-symbols-outlined font-black text-2xl ${isCheckingDuplicates ? '' : 'filled'}`}>
+            {isCheckingDuplicates ? 'progress_activity' : 'rocket_launch'}
+          </span>
+          {isCheckingDuplicates ? 'CHECKING TARGET...' : 'COMMIT TO ARCHIVE'}
         </button>
       </div>
     </aside>

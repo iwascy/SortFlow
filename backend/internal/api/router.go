@@ -12,7 +12,8 @@ import (
 func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	fileHandler := handler.NewFileHandler(cfg)
 	previewHandler := handler.NewPreviewHandler(cfg)
-	executionEngine := service.NewExecutionEngine(db, cfg.AllowedRootPaths)
+	hashIndex := service.NewHashIndexService(db)
+	executionEngine := service.NewExecutionEngine(db, cfg.AllowedRootPaths, hashIndex)
 	organizeHandler := handler.NewOrganizeHandler(executionEngine, cfg)
 	taskHandler := handler.NewTaskHandler(db, executionEngine)
 	systemHandler := handler.NewSystemHandler(db, cfg)
@@ -26,6 +27,7 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	r.POST("/preview", previewHandler.GeneratePreview)
 
 	r.POST("/organize/execute", organizeHandler.Execute)
+	r.POST("/organize/duplicates", organizeHandler.CheckDuplicates)
 
 	r.GET("/tasks/:id", taskHandler.GetTask)
 	r.GET("/ws/tasks/:id", taskHandler.StreamTask)

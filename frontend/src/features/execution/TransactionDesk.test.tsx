@@ -64,4 +64,10 @@ describe('TransactionDesk', () => {
         fireEvent.click(screen.getByText(/COMMIT TO ARCHIVE/i));
         expect(handleExecute).toHaveBeenCalled();
     });
+
+    it('disables execute button while checking duplicates', () => {
+        render(<TransactionDesk onExecute={() => {}} isCheckingDuplicates />);
+        const button = screen.getByRole('button', { name: /CHECKING TARGET/i });
+        expect(button).toBeDisabled();
+    });
 });

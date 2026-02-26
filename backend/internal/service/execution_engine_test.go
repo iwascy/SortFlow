@@ -17,7 +17,7 @@ import (
 
 func TestExecutionEngineProcessFile(t *testing.T) {
 	tempDir := t.TempDir()
-	engine := NewExecutionEngine(nil, []string{tempDir})
+	engine := NewExecutionEngine(nil, []string{tempDir}, nil)
 
 	moveSrc := filepath.Join(tempDir, "move.txt")
 	moveDst := filepath.Join(tempDir, "moved", "move.txt")
@@ -73,7 +73,7 @@ func TestExecutionEngineProcessFile(t *testing.T) {
 func TestExecutionEngineExecuteUpdatesProgressAndLogs(t *testing.T) {
 	db := newTestDB(t)
 	tempDir := t.TempDir()
-	engine := NewExecutionEngine(db, []string{tempDir})
+	engine := NewExecutionEngine(db, []string{tempDir}, NewHashIndexService(db))
 
 	task, err := engine.CreateTask()
 	if err != nil {
@@ -129,6 +129,82 @@ func TestExecutionEngineExecuteUpdatesProgressAndLogs(t *testing.T) {
 	}
 }
 
+func TestExecutionEngineProcessFileRequiresOverwriteFlag(t *testing.T) {
+	db := newTestDB(t)
+	tempDir := t.TempDir()
+	engine := NewExecutionEngine(db, []string{tempDir}, NewHashIndexService(db))
+
+	src := filepath.Join(tempDir, "source-overwrite.txt")
+	if err := os.WriteFile(src, []byte("new"), 0o644); err != nil {
+		t.Fatalf("failed to create source: %v", err)
+	}
+
+	target := filepath.Join(tempDir, "target", "same.txt")
+	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		t.Fatalf("failed to create target dir: %v", err)
+	}
+	if err := os.WriteFile(target, []byte("old"), 0o644); err != nil {
+		t.Fatalf("failed to seed target file: %v", err)
+	}
+
+	err := engine.processFile(dto.OrganizeAction{
+		SourcePath: src,
+		TargetPath: target,
+		Operation:  "copy",
+	})
+	if err == nil {
+		t.Fatalf("expected error without overwrite flag")
+	}
+
+	if err := engine.processFile(dto.OrganizeAction{
+		SourcePath:     src,
+		TargetPath:     target,
+		Operation:      "copy",
+		AllowOverwrite: true,
+	}); err != nil {
+		t.Fatalf("expected overwrite to succeed: %v", err)
+	}
+}
+
+func TestExecutionEngineCheckDuplicates(t *testing.T) {
+	db := newTestDB(t)
+	tempDir := t.TempDir()
+	engine := NewExecutionEngine(db, []string{tempDir}, NewHashIndexService(db))
+
+	existing := filepath.Join(tempDir, "dest", "dup.txt")
+	if err := os.MkdirAll(filepath.Dir(existing), 0o755); err != nil {
+		t.Fatalf("failed to create existing dir: %v", err)
+	}
+	if err := os.WriteFile(existing, []byte("same data"), 0o644); err != nil {
+		t.Fatalf("failed to seed existing file: %v", err)
+	}
+
+	source := filepath.Join(tempDir, "source", "photo.txt")
+	if err := os.MkdirAll(filepath.Dir(source), 0o755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+	if err := os.WriteFile(source, []byte("same data"), 0o644); err != nil {
+		t.Fatalf("failed to write source: %v", err)
+	}
+
+	conflicts, err := engine.CheckDuplicates([]dto.OrganizeAction{
+		{
+			SourcePath: source,
+			TargetPath: filepath.Join(tempDir, "dest", "photo.txt"),
+			Operation:  "move",
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(conflicts) != 1 {
+		t.Fatalf("expected 1 conflict, got %d", len(conflicts))
+	}
+	if conflicts[0].ExistingName != "dup.txt" {
+		t.Fatalf("unexpected existing name: %s", conflicts[0].ExistingName)
+	}
+}
+
 func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -136,7 +212,16 @@ func newTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Task{}, &model.History{}, &model.HistoryFile{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.Task{},
+		&model.History{},
+		&model.HistoryFile{},
+		&model.FileHash{},
+		&model.SourceWatcher{},
+		&model.TargetRoot{},
+		&model.Preset{},
+		&model.Keyword{},
+	); err != nil {
 		t.Fatalf("failed to migrate db: %v", err)
 	}
 	return db

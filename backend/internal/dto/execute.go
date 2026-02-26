@@ -1,9 +1,10 @@
 package dto
 
 type OrganizeAction struct {
-	SourcePath string `json:"sourcePath"`
-	TargetPath string `json:"targetPath"`
-	Operation  string `json:"operation"` // move/copy
+	SourcePath     string `json:"sourcePath"`
+	TargetPath     string `json:"targetPath"`
+	Operation      string `json:"operation"` // move/copy
+	AllowOverwrite bool   `json:"allowOverwrite,omitempty"`
 }
 
 type ExecuteRequest struct {

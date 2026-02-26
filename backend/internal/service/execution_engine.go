@@ -24,15 +24,17 @@ type ExecutionEngine struct {
 	db           *gorm.DB
 	history      *HistoryService
 	allowedRoots []string
+	hashIndex    *HashIndexService
 	cancelMu     sync.Mutex
 	cancels      map[string]context.CancelFunc
 }
 
-func NewExecutionEngine(db *gorm.DB, allowedRoots []string) *ExecutionEngine {
+func NewExecutionEngine(db *gorm.DB, allowedRoots []string, hashIndex *HashIndexService) *ExecutionEngine {
 	return &ExecutionEngine{
 		db:           db,
 		history:      NewHistoryService(db),
 		allowedRoots: allowedRoots,
+		hashIndex:    hashIndex,
 		cancels:      make(map[string]context.CancelFunc),
 	}
 }
@@ -78,6 +80,69 @@ func (e *ExecutionEngine) CancelTask(taskID string) error {
 	}
 	cancel()
 	return nil
+}
+
+func (e *ExecutionEngine) CheckDuplicates(actions []dto.OrganizeAction) ([]dto.DuplicateConflict, error) {
+	if e.hashIndex == nil {
+		return nil, errors.New("hash index is not configured")
+	}
+
+	conflicts := make([]dto.DuplicateConflict, 0)
+
+	for _, action := range actions {
+		if action.SourcePath == "" || action.TargetPath == "" {
+			continue
+		}
+		if !security.ValidatePath(action.SourcePath, e.allowedRoots) || !security.ValidatePath(action.TargetPath, e.allowedRoots) {
+			return nil, errors.New("path not allowed")
+		}
+
+		sourceInfo, err := os.Stat(action.SourcePath)
+		if err != nil || sourceInfo.IsDir() {
+			continue
+		}
+
+		sourceHash, err := e.hashIndex.EnsureHash(action.SourcePath)
+		if err != nil {
+			return nil, err
+		}
+
+		targetDir := filepath.Dir(action.TargetPath)
+		entries, err := os.ReadDir(targetDir)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			return nil, err
+		}
+
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			existingPath := filepath.Join(targetDir, entry.Name())
+			if samePath(existingPath, action.SourcePath) {
+				continue
+			}
+
+			existingHash, err := e.hashIndex.EnsureHash(existingPath)
+			if err != nil {
+				continue
+			}
+
+			if existingHash.Hash == sourceHash.Hash {
+				conflicts = append(conflicts, dto.DuplicateConflict{
+					SourcePath:   action.SourcePath,
+					SourceName:   filepath.Base(action.SourcePath),
+					TargetPath:   action.TargetPath,
+					ExistingPath: existingPath,
+					ExistingName: entry.Name(),
+				})
+			}
+		}
+	}
+
+	return conflicts, nil
 }
 
 func (e *ExecutionEngine) Execute(taskID string, request dto.ExecuteRequest) error {
@@ -226,17 +291,90 @@ func (e *ExecutionEngine) processFile(action dto.OrganizeAction) error {
 	if !security.ValidatePath(action.SourcePath, e.allowedRoots) || !security.ValidatePath(action.TargetPath, e.allowedRoots) {
 		return errors.New("path not allowed")
 	}
+
+	var sourceHash model.FileHash
+	var sourceInfo os.FileInfo
+	var err error
+	if e.hashIndex != nil {
+		sourceInfo, err = os.Stat(action.SourcePath)
+		if err != nil {
+			return err
+		}
+		if sourceInfo.IsDir() {
+			return errors.New("directories are not supported in execution engine")
+		}
+		sourceHash, err = e.hashIndex.EnsureHash(action.SourcePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	var opErr error
 	switch action.Operation {
 	case "move":
+		if err := e.prepareTarget(action); err != nil {
+			return err
+		}
 		if err := os.MkdirAll(filepath.Dir(action.TargetPath), 0o755); err != nil {
 			return err
 		}
-		return os.Rename(action.SourcePath, action.TargetPath)
+		opErr = os.Rename(action.SourcePath, action.TargetPath)
 	case "copy":
-		return copyFile(action.SourcePath, action.TargetPath)
+		if err := e.prepareTarget(action); err != nil {
+			return err
+		}
+		opErr = copyFile(action.SourcePath, action.TargetPath)
 	default:
 		return errors.New("unsupported operation")
 	}
+
+	if opErr != nil {
+		return opErr
+	}
+
+	if e.hashIndex != nil {
+		targetInfo, statErr := os.Stat(action.TargetPath)
+		if statErr == nil {
+			if saveErr := e.hashIndex.SaveWithInfo(action.TargetPath, sourceHash.Hash, targetInfo); saveErr != nil {
+				return saveErr
+			}
+		}
+		if action.Operation == "move" {
+			_ = e.hashIndex.Delete(action.SourcePath)
+		}
+	}
+
+	return nil
+}
+
+func (e *ExecutionEngine) prepareTarget(action dto.OrganizeAction) error {
+	targetInfo, err := os.Stat(action.TargetPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+
+	if targetInfo.IsDir() {
+		return errors.New("cannot overwrite directory with file")
+	}
+
+	if !action.AllowOverwrite {
+		return fmt.Errorf("target file already exists: %s", action.TargetPath)
+	}
+
+	if err := os.Remove(action.TargetPath); err != nil {
+		return err
+	}
+	if e.hashIndex != nil {
+		_ = e.hashIndex.Delete(action.TargetPath)
+	}
+	return nil
+}
+
+func samePath(a, b string) bool {
+	return filepath.Clean(a) == filepath.Clean(b)
 }
 
 func copyFile(src, dst string) error {

@@ -21,6 +21,7 @@ func InitDB(dbPath string) (*gorm.DB, error) {
 		&model.History{},
 		&model.HistoryFile{},
 		&model.Task{},
+		&model.FileHash{},
 	); err != nil {
 		return nil, err
 	}

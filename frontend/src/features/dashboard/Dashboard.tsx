@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { Sidebar } from './Sidebar';
 import { MixerPanel } from '../pattern-mixer/MixerPanel';
@@ -6,9 +6,18 @@ import { FileGrid } from '../file-explorer/FileGrid';
 import { TransactionDesk } from '../execution/TransactionDesk';
 import { INITIAL_FILES, PRESETS, TARGET_ROOTS } from '../../constants';
 import { fileService } from '../../services/fileService';
-import { executeService, toExecutionUpdate, type TaskResponse } from '../../services/executeService';
+import {
+  executeService,
+  toExecutionUpdate,
+  type OrganizeActionPayload,
+  type DuplicateConflict,
+  type TaskResponse
+} from '../../services/executeService';
 import { configService } from '../../services/configService';
 import { buildPreviewOps, getTargetDir } from '../../utils/preview';
+import { Modal } from '../../components/Modal';
+import { Button } from '../../components/Button';
+import type { CategoryPreset, PreviewOperation, TargetRoot } from '../../types';
 
 export const Dashboard: React.FC = () => {
   const {
@@ -34,6 +43,15 @@ export const Dashboard: React.FC = () => {
 
   const wsRef = useRef<WebSocket | null>(null);
   const wsTaskIdRef = useRef<string | null>(null);
+  const [duplicatePrompt, setDuplicatePrompt] = useState<{
+    conflicts: DuplicateConflict[];
+    actions: OrganizeActionPayload[];
+    targetPath: string;
+    preset: CategoryPreset;
+    target: TargetRoot;
+  } | null>(null);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [isConfirmingDuplicates, setIsConfirmingDuplicates] = useState(false);
 
   const normalizePath = useCallback((value: string) => {
     if (!value) return '';
@@ -181,6 +199,42 @@ export const Dashboard: React.FC = () => {
     };
   }, [executionState.status, executionState.taskId, setExecutionState]);
 
+  const startExecution = useCallback(async ({
+    actions,
+    targetPath,
+    preset,
+    target,
+  }: {
+    actions: OrganizeActionPayload[];
+    targetPath: string;
+    preset: CategoryPreset;
+    target: TargetRoot;
+  }) => {
+    setExecutionState({
+      status: 'EXECUTING',
+      progress: 0,
+      logs: ['Initializing job...'],
+      processedFiles: 0,
+      totalFiles: actions.length,
+      error: undefined
+    });
+
+    try {
+      const { taskId } = await executeService.executeTask({
+        actions,
+        action: 'move',
+        presetId: preset.id,
+        targetRootId: target.id,
+        targetPath
+      });
+      setExecutionState({ taskId });
+      updateMixerConfig({ tempKeyword: '' });
+    } catch (error) {
+      console.error(error);
+      setExecutionState({ status: 'ERROR', error: 'Failed to start execution' });
+    }
+  }, [setExecutionState, updateMixerConfig]);
+
   const handleExecute = async () => {
     if (selectedIds.size === 0) return;
     if (executionState.status !== 'IDLE' && executionState.status !== 'DONE' && executionState.status !== 'ERROR') return;
@@ -211,31 +265,84 @@ export const Dashboard: React.FC = () => {
       return;
     }
 
-    setExecutionState({
-      status: 'EXECUTING',
-      progress: 0,
-      logs: ['Initializing job...'],
-      processedFiles: 0,
-      totalFiles: actions.length,
-      error: undefined
-    });
-
+    const targetPath = getTargetDir(activePreset, activeTarget);
+    setIsCheckingDuplicates(true);
     try {
-      const targetPath = getTargetDir(activePreset, activeTarget);
-      const { taskId } = await executeService.executeTask({
+      const { conflicts } = await executeService.checkDuplicates({
+        targetPath,
         actions,
-        action: 'move',
-        presetId: activePreset.id,
-        targetRootId: activeTarget.id,
-        targetPath
       });
-      setExecutionState({ taskId });
-      updateMixerConfig({ tempKeyword: '' });
+      if (conflicts.length > 0) {
+        setDuplicatePrompt({
+          conflicts,
+          actions,
+          targetPath,
+          preset: activePreset,
+          target: activeTarget,
+        });
+        return;
+      }
+      await startExecution({ actions, targetPath, preset: activePreset, target: activeTarget });
     } catch (error) {
       console.error(error);
-      setExecutionState({ status: 'ERROR', error: 'Failed to start execution' });
+      setExecutionState({ status: 'ERROR', error: '无法完成重复检测，请稍后再试。' });
+    } finally {
+      setIsCheckingDuplicates(false);
     }
   };
+
+  const handleSkipDuplicates = async () => {
+    if (!duplicatePrompt) return;
+    const skipSources = new Set(duplicatePrompt.conflicts.map(conflict => conflict.sourcePath));
+    const remainingActions = duplicatePrompt.actions.filter(action => !skipSources.has(action.sourcePath));
+    if (remainingActions.length === 0) {
+      setDuplicatePrompt(null);
+      setExecutionState({ status: 'ERROR', error: '所有重复文件均被跳过，未剩余可执行任务。' });
+      return;
+    }
+    setIsConfirmingDuplicates(true);
+    try {
+      await startExecution({
+        actions: remainingActions,
+        targetPath: duplicatePrompt.targetPath,
+        preset: duplicatePrompt.preset,
+        target: duplicatePrompt.target,
+      });
+      setDuplicatePrompt(null);
+    } finally {
+      setIsConfirmingDuplicates(false);
+    }
+  };
+
+  const handleOverwriteDuplicates = async () => {
+    if (!duplicatePrompt) return;
+    const overwriteSources = new Set(duplicatePrompt.conflicts.map(conflict => conflict.sourcePath));
+    const updatedActions = duplicatePrompt.actions.map(action =>
+      overwriteSources.has(action.sourcePath)
+        ? { ...action, allowOverwrite: true }
+        : action
+    );
+    setIsConfirmingDuplicates(true);
+    try {
+      await startExecution({
+        actions: updatedActions,
+        targetPath: duplicatePrompt.targetPath,
+        preset: duplicatePrompt.preset,
+        target: duplicatePrompt.target,
+      });
+      setDuplicatePrompt(null);
+    } finally {
+      setIsConfirmingDuplicates(false);
+    }
+  };
+
+  const handleDismissDuplicatePrompt = () => {
+    if (isConfirmingDuplicates) return;
+    setDuplicatePrompt(null);
+  };
+
+  const duplicateListPreview = duplicatePrompt ? duplicatePrompt.conflicts.slice(0, 5) : [];
+  const remainingConflictCount = duplicatePrompt ? duplicatePrompt.conflicts.length - duplicateListPreview.length : 0;
 
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-background-dark relative animate-in fade-in overflow-hidden">
@@ -256,7 +363,7 @@ export const Dashboard: React.FC = () => {
         <FileGrid />
       </div>
 
-      <TransactionDesk onExecute={handleExecute} />
+      <TransactionDesk onExecute={handleExecute} isCheckingDuplicates={isCheckingDuplicates} />
 
       {executionState.status !== 'IDLE' && (
         <div className="fixed bottom-6 right-6 lg:right-[440px] z-[80] w-[280px] rounded-2xl border border-border-dark bg-surface-dark/80 p-4 shadow-2xl backdrop-blur">
@@ -294,6 +401,51 @@ export const Dashboard: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+      {duplicatePrompt && (
+        <Modal
+          isOpen
+          onClose={handleDismissDuplicatePrompt}
+          title="检测到重复文件"
+          footer={(
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button
+                variant="secondary"
+                onClick={handleSkipDuplicates}
+                disabled={isConfirmingDuplicates}
+              >
+                跳过重复项
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleOverwriteDuplicates}
+                isLoading={isConfirmingDuplicates}
+              >
+                覆盖重复项
+              </Button>
+            </div>
+          )}
+        >
+          <div className="space-y-3 text-sm text-gray-600">
+            <p>
+              在 <span className="font-mono text-gray-900">{duplicatePrompt.targetPath}</span> 中发现 {duplicatePrompt.conflicts.length} 个内容一致的文件（通过 MD5 对比）。
+            </p>
+            <ul className="list-disc list-inside text-xs text-gray-700 space-y-1">
+              {duplicateListPreview.map((conflict, index) => (
+                <li key={`${conflict.existingPath}-${index}`}>
+                  <span className="font-mono text-gray-900">{conflict.sourceName}</span>
+                  <span className="text-gray-500"> ⇄ {conflict.existingName}</span>
+                </li>
+              ))}
+            </ul>
+            {remainingConflictCount > 0 && (
+              <p className="text-xs text-amber-600">另有 {remainingConflictCount} 个重复文件未列出。</p>
+            )}
+            <p className="text-xs text-gray-500">
+              选择“跳过”仅执行其余文件；选择“覆盖”则会删除重复文件后再写入新的副本。
+            </p>
+          </div>
+        </Modal>
       )}
     </div>
   );

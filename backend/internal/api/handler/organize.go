@@ -68,3 +68,29 @@ func (h *OrganizeHandler) Execute(c *gin.Context) {
 
 	c.JSON(http.StatusAccepted, dto.ExecuteResponse{TaskID: task.ID})
 }
+
+func (h *OrganizeHandler) CheckDuplicates(c *gin.Context) {
+	var request dto.DuplicateCheckRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response.AbortWithError(c, response.BadRequest(err))
+		return
+	}
+
+	if request.TargetPath == "" {
+		response.AbortWithError(c, response.BadRequest(errors.New("targetPath is required")))
+		return
+	}
+
+	if !security.ValidatePath(request.TargetPath, h.cfg.AllowedRootPaths) {
+		response.AbortWithError(c, response.Forbidden("path not allowed"))
+		return
+	}
+
+	conflicts, err := h.engine.CheckDuplicates(request.Actions)
+	if err != nil {
+		response.AbortWithError(c, response.Internal(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.DuplicateCheckResponse{Conflicts: conflicts})
+}
