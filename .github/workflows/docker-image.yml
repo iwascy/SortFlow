@@ -12,6 +12,7 @@ env:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    environment: deploy
     permissions:
       contents: read
 
