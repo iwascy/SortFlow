@@ -86,6 +86,29 @@ docker run -d --name sortflow \
 > NAS 可参考 `docker-compose.nas.yml`。  
 > For NAS deployment, see `docker-compose.nas.yml`.
 
+### 4) CI 自动推送 Docker Hub | CI Push to Docker Hub
+
+仓库内置工作流：`.github/workflows/docker-image.yml`  
+Built-in workflow: `.github/workflows/docker-image.yml`
+
+触发条件 / Triggers:
+- push 到 `main`
+- 手动触发 `workflow_dispatch`
+
+请在 GitHub 仓库中配置以下项：
+
+**Secrets**
+- `DOCKERHUB_USERNAME`：Docker Hub 用户名
+- `DOCKERHUB_TOKEN`：Docker Hub Access Token（建议不要使用账号密码）
+
+**Variables（可选）**
+- `DOCKERHUB_NAMESPACE`：Docker Hub 命名空间（组织名或用户名）
+  - 未设置时默认使用 `DOCKERHUB_USERNAME`
+
+镜像推送目标：
+- `${DOCKERHUB_NAMESPACE}/sortflow:latest`（默认分支）
+- `${DOCKERHUB_NAMESPACE}/sortflow:sha-<commit>`
+
 ## 环境变量 | Environment Variables
 
 ### Backend
