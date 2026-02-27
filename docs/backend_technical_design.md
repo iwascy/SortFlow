@@ -129,22 +129,72 @@ func ValidatePath(path string, allowedRoots []string) bool {
 ```
 
 ## 6. 部署
-*   Go 编译为单一可执行文件，无需额外运行时依赖。
-*   建议使用 Docker 容器化部署，挂载宿主机的 NAS 目录或存储目录到容器内部。
+### 6.1 单镜像部署（前后端一体）
+当前项目采用单镜像部署：构建阶段编译前端静态资源，运行阶段由后端同时提供 API 与前端页面。
 
-```dockerfile
-# 多阶段构建
-FROM golang:1.21-alpine AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=1 GOOS=linux go build -o sortflow ./cmd/server
+关键约定：
+*   容器内数据库路径：`/data/sortflow.db`（通过 `DATABASE_URL` 指定）。
+*   推荐将宿主机目录 `./sortflow-data` 挂载到容器 `/data`，用于持久化 SQLite。
+*   需要把 NAS 的源/目标目录挂载到容器内，并把这些容器内路径加入 `ALLOWED_ROOT_PATHS`。
 
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates sqlite
-WORKDIR /app
-COPY --from=builder /app/sortflow .
-EXPOSE 8000
-CMD ["./sortflow"]
+示例 `docker-compose`：
+
+```yaml
+services:
+  sortflow:
+    image: sortflow:all-in-one
+    container_name: sortflow
+    restart: unless-stopped
+    ports:
+      - "8463:8463"
+    environment:
+      PORT: "8463"
+      DATABASE_URL: "/data/sortflow.db"
+      ALLOWED_ROOT_PATHS: "/data,/media/source,/media/target"
+    volumes:
+      - ./sortflow-data:/data
+      - /volume1/media:/media/source:rw
+      - /volume1/sorted:/media/target:rw
 ```
+
+### 6.2 SQLite 数据库迁移到 NAS
+适用场景：本地已有历史配置与记录，需要迁移到 NAS 容器环境。
+
+以当前仓库为例：
+*   旧数据库文件：`backend/sortflow.db`
+*   新容器数据库文件：`/data/sortflow.db`
+*   宿主机映射目录：`./sortflow-data/sortflow.db`
+
+推荐步骤（停机迁移）：
+
+1. 停止 NAS 上当前服务，避免迁移期间写入：
+
+```bash
+docker compose -f docker-compose.nas.yml down
+```
+
+2. 将旧库文件拷贝到 NAS 项目目录的数据卷位置：
+
+```bash
+scp /Users/cyan/code/SortFlow/backend/sortflow.db <nas_user>@<nas_ip>:/<你的项目路径>/sortflow-data/sortflow.db
+```
+
+3. 重新启动容器：
+
+```bash
+docker compose -f docker-compose.nas.yml up -d
+```
+
+4. 验证配置是否迁移成功：
+
+```bash
+curl http://<nas_ip>:8463/system/config
+```
+
+若返回中包含原有 `watchers/targets/presets/keywords`，说明迁移成功。
+
+### 6.3 迁移注意事项
+*   权限：若容器日志提示 `sortflow.db` 无法写入，请为 `sortflow-data` 目录赋予可写权限后重启。
+*   路径：数据库里保存的是目录路径，跨机器后可能需要在 UI 中改成新 NAS 的实际路径。
+*   白名单：`ALLOWED_ROOT_PATHS` 必须覆盖你在 UI 里要访问的容器内路径。
+*   浏览器本地数据：`localStorage` 中 `sortflow.customKeywords` 不在 SQLite 内，需在新环境手动补充。

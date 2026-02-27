@@ -7,6 +7,7 @@ import (
 	"sortflow/internal/api/handler"
 	"sortflow/internal/config"
 	"sortflow/internal/service"
+	"sortflow/internal/web"
 )
 
 func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
@@ -52,4 +53,6 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	r.GET("/history/:id", historyHandler.GetHistory)
 	r.POST("/history/:id/undo", historyHandler.UndoHistory)
 	r.DELETE("/history", historyHandler.DeleteHistory)
+
+	web.RegisterSPARoutes(r)
 }

@@ -1,0 +1,15 @@
+services:
+  sortflow:
+    image: sortflow:all-in-one
+    container_name: sortflow
+    restart: unless-stopped
+    ports:
+      - "8463:8463"
+    environment:
+      PORT: "8463"
+      DATABASE_URL: "/data/sortflow.db"
+      ALLOWED_ROOT_PATHS: "/data,/media/source,/media/target"
+    volumes:
+      - ./sortflow-data:/data
+      - /volume1/media:/media/source:rw
+      - /volume1/sorted:/media/target:rw
