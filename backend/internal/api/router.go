@@ -35,6 +35,8 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config, db *gorm.DB) {
 	r.POST("/tasks/:id/cancel", taskHandler.CancelTask)
 
 	r.GET("/system/config", systemHandler.GetConfig)
+	r.GET("/system/config/export", systemHandler.ExportConfig)
+	r.POST("/system/config/import", systemHandler.ImportConfig)
 	r.POST("/system/watchers", systemHandler.AddWatcher)
 	r.DELETE("/system/watchers", systemHandler.RemoveWatcher)
 	r.POST("/system/presets", systemHandler.CreatePreset)

@@ -7,6 +7,19 @@ type SystemConfigResponse struct {
 	Keywords []KeywordDTO `json:"keywords"`
 }
 
+const ConfigExportVersion = 1
+
+type SystemConfigExportResponse struct {
+	Version    int                  `json:"version"`
+	ExportedAt string               `json:"exportedAt"`
+	Config     SystemConfigResponse `json:"config"`
+}
+
+type SystemConfigImportRequest struct {
+	Version int                  `json:"version"`
+	Config  SystemConfigResponse `json:"config"`
+}
+
 type TargetDTO struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

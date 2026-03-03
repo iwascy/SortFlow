@@ -114,3 +114,75 @@ func TestConfigServiceTargetsAndWatchers(t *testing.T) {
 		t.Fatalf("failed to remove watcher: %v", err)
 	}
 }
+
+func TestConfigServiceImportSystemConfig(t *testing.T) {
+	db := newTestDB(t)
+	service := NewConfigService(db)
+
+	if err := service.AddWatcher("/old/watcher"); err != nil {
+		t.Fatalf("failed to add old watcher: %v", err)
+	}
+	if _, err := service.CreateKeyword(dto.KeywordRequest{Name: "old", Order: 1}); err != nil {
+		t.Fatalf("failed to add old keyword: %v", err)
+	}
+
+	err := service.ImportSystemConfig(dto.SystemConfigResponse{
+		Watchers: []string{"/new/watcher"},
+		Targets: []dto.TargetDTO{
+			{
+				Name: "Media",
+				Path: "/mnt/media",
+				Icon: "storage",
+			},
+		},
+		Presets: []dto.PresetDTO{
+			{
+				Name:          "Trips",
+				Icon:          "photo",
+				Color:         "#fff",
+				TargetSubPath: "2026",
+				DefaultPrefix: "TRIP",
+				Order:         2,
+			},
+		},
+		Keywords: []dto.KeywordDTO{
+			{
+				Name:  "travel",
+				Order: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to import config: %v", err)
+	}
+
+	config, err := service.GetSystemConfig()
+	if err != nil {
+		t.Fatalf("failed to get config: %v", err)
+	}
+
+	if len(config.Watchers) != 1 || config.Watchers[0] != "/new/watcher" {
+		t.Fatalf("unexpected watchers after import: %+v", config.Watchers)
+	}
+	if len(config.Targets) != 1 {
+		t.Fatalf("expected 1 target after import, got %d", len(config.Targets))
+	}
+	if config.Targets[0].ID == "" {
+		t.Fatalf("expected generated target id")
+	}
+	if config.Targets[0].Name != "Media" {
+		t.Fatalf("unexpected target name: %s", config.Targets[0].Name)
+	}
+	if len(config.Presets) != 1 {
+		t.Fatalf("expected 1 preset after import, got %d", len(config.Presets))
+	}
+	if config.Presets[0].ID == "" {
+		t.Fatalf("expected generated preset id")
+	}
+	if len(config.Keywords) != 1 {
+		t.Fatalf("expected 1 keyword after import, got %d", len(config.Keywords))
+	}
+	if config.Keywords[0].ID == "" {
+		t.Fatalf("expected generated keyword id")
+	}
+}

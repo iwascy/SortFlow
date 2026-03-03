@@ -1,6 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { configService } from '../../services/configService';
+
+const CONFIG_EXPORT_VERSION = 1;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
 
 export const ConfigurationPage: React.FC = () => {
   const { config, presets, targetRoots, keywords, setConfig, setPresets, setTargetRoots, setKeywords } = useAppStore();
@@ -21,6 +26,8 @@ export const ConfigurationPage: React.FC = () => {
   const [keywordEdits, setKeywordEdits] = useState<Record<string, string>>({});
   const [coverResult, setCoverResult] = useState<string | null>(null);
   const [keywordInput, setKeywordInput] = useState('');
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const importFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadConfig = useCallback(async () => {
     setLoading(true);
@@ -39,7 +46,7 @@ export const ConfigurationPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [setConfig, setPresets, setTargetRoots]);
+  }, [setConfig, setKeywords, setPresets, setTargetRoots]);
 
   useEffect(() => {
     void loadConfig();
@@ -52,6 +59,88 @@ export const ConfigurationPage: React.FC = () => {
     });
     setKeywordEdits(nextEdits);
   }, [keywords]);
+
+  const handleExportConfig = async () => {
+    setLoading(true);
+    setError(null);
+    setStatusMessage(null);
+    try {
+      const payload = await configService.exportConfig();
+      const exportPayload = {
+        ...payload,
+        version: payload.version || CONFIG_EXPORT_VERSION,
+        clientConfig: {
+          hideNonMedia: Boolean(config.hideNonMedia),
+          customKeywords: Array.isArray(config.customKeywords) ? config.customKeywords : [],
+        },
+      };
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `sortflow-config-${timestamp}.json`;
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json;charset=utf-8' });
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+
+      setStatusMessage(`配置已导出：${fileName}`);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to export configuration.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImportButtonClick = () => {
+    importFileInputRef.current?.click();
+  };
+
+  const handleImportConfig = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+    setStatusMessage(null);
+    try {
+      const content = await file.text();
+      const parsed = JSON.parse(content) as unknown;
+      if (!isRecord(parsed)) {
+        throw new Error('invalid payload');
+      }
+
+      const hasNestedConfig = isRecord(parsed.config);
+      const serverPayload = hasNestedConfig ? parsed : { version: CONFIG_EXPORT_VERSION, config: parsed };
+      await configService.importConfig(serverPayload);
+
+      if (isRecord(parsed.clientConfig)) {
+        if (Array.isArray(parsed.clientConfig.customKeywords)) {
+          const importedKeywords = parsed.clientConfig.customKeywords.filter(
+            (item): item is string => typeof item === 'string' && item.trim().length > 0
+          );
+          setConfig({ customKeywords: importedKeywords });
+          localStorage.setItem('sortflow.customKeywords', JSON.stringify(importedKeywords));
+        }
+        if (typeof parsed.clientConfig.hideNonMedia === 'boolean') {
+          setConfig({ hideNonMedia: parsed.clientConfig.hideNonMedia });
+        }
+      }
+
+      await loadConfig();
+      setStatusMessage(`配置已导入：${file.name}`);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to import configuration.');
+    } finally {
+      input.value = '';
+      setLoading(false);
+    }
+  };
+
   const handleAddWatcher = async () => {
     if (!watcherPath.trim()) return;
     setLoading(true);
@@ -233,18 +322,44 @@ export const ConfigurationPage: React.FC = () => {
           <h2 className="text-2xl font-black tracking-tight">Configuration</h2>
           <p className="text-xs text-text-secondary">Manage source watchers, target roots, and presets.</p>
         </div>
-        <button
-          onClick={loadConfig}
-          className="px-4 py-2 text-xs font-black uppercase tracking-widest bg-surface-dark/60 border border-border-dark rounded-xl hover:border-primary/40"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={importFileInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleImportConfig}
+          />
+          <button
+            onClick={handleImportButtonClick}
+            className="px-4 py-2 text-xs font-black uppercase tracking-widest bg-surface-dark/60 border border-border-dark rounded-xl hover:border-primary/40"
+          >
+            Import
+          </button>
+          <button
+            onClick={handleExportConfig}
+            className="px-4 py-2 text-xs font-black uppercase tracking-widest bg-surface-dark/60 border border-border-dark rounded-xl hover:border-primary/40"
+          >
+            Export
+          </button>
+          <button
+            onClick={loadConfig}
+            className="px-4 py-2 text-xs font-black uppercase tracking-widest bg-surface-dark/60 border border-border-dark rounded-xl hover:border-primary/40"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="p-10 space-y-10">
         {error && (
           <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
             {error}
+          </div>
+        )}
+        {statusMessage && (
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-sm">
+            {statusMessage}
           </div>
         )}
         {loading && <div className="text-xs text-text-secondary">Loading...</div>}

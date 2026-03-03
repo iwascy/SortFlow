@@ -8,6 +8,16 @@ export interface SystemConfigResponse {
   keywords: Keyword[];
 }
 
+export interface SystemConfigExportResponse {
+  version: number;
+  exportedAt: string;
+  config: SystemConfigResponse;
+  clientConfig?: {
+    hideNonMedia?: boolean;
+    customKeywords?: string[];
+  };
+}
+
 export interface CreatePresetRequest {
   name: string;
   icon?: string;
@@ -36,6 +46,14 @@ export interface GenerateVideoCoversResponse {
 
 export const configService = {
   getConfig: () => request<SystemConfigResponse>('/system/config'),
+
+  exportConfig: () => request<SystemConfigExportResponse>('/system/config/export'),
+
+  importConfig: (payload: unknown) =>
+    request<void>('/system/config/import', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 
   addWatcher: (path: string) =>
     request<void>('/system/watchers', {
